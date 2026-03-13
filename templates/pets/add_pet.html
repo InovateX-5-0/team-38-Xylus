@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{% if edit %}Edit{% else %}Add{% endif %} Pet — PawNest{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:640px;">
+  <div class="section-tag">🐾 {% if edit %}Edit Pet{% else %}Add Pet{% endif %}</div>
+  <h2 class="page-header mb-4">{% if edit %}Update {{ pet.name }}'s profile{% else %}Add a new pet 🌸{% endif %}</h2>
+  <div class="card-soft p-4">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label fw-semibold">Pet Name *</label>{{ form.name }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">Species *</label>{{ form.species }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">Breed</label>{{ form.breed }}</div>
+        <div class="col-md-3"><label class="form-label fw-semibold">Age (months) *</label>{{ form.age }}</div>
+        <div class="col-md-3"><label class="form-label fw-semibold">Gender *</label>{{ form.gender }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">Weight (kg)</label>{{ form.weight }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">Color</label>{{ form.color }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">Microchip ID</label>{{ form.microchip_id }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">Health Status</label>{{ form.status }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Photo</label>{{ form.photo }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Notes</label>{{ form.notes }}</div>
+      </div>
+      <div class="d-flex gap-3 mt-4">
+        <button type="submit" class="btn btn-pill btn-rose flex-grow-1">{% if edit %}Save Changes{% else %}Add Pet 🐾{% endif %}</button>
+        <a href="{% url 'pet_list' %}" class="btn btn-pill btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

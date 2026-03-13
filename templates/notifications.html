@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications — PawNest 🐾{% endblock %}
+
+{% block extra_css %}
+<style>
+.notifications-wrap{max-width:1060px;padding:34px 16px 60px;}
+.notifications-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:16px;align-items:start;}
+.notify-card{padding:24px;}
+.notify-title{font-family:'Playfair Display',serif;font-weight:700;font-size:1.15rem;margin:0 0 14px;}
+.notify-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-top:1px solid rgba(155,93,229,.1);}
+.notify-row:first-child{border-top:none;padding-top:0;}
+.notify-label{font-size:.9rem;font-weight:600;color:var(--ink);margin:0;}
+.recent-list{display:flex;flex-direction:column;gap:10px;}
+.recent-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:#FAF8F5;border:1px solid rgba(155,93,229,.08);}
+.recent-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(224,82,122,.12),rgba(155,93,229,.12));color:var(--rose);font-size:.9rem;flex-shrink:0;}
+.recent-text{font-size:.88rem;font-weight:600;color:var(--ink);margin:0;}
+@media(max-width:900px){
+  .notifications-grid{grid-template-columns:1fr;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container notifications-wrap">
+  <span class="section-tag">Alerts</span>
+  <h1 class="page-header">Notifications</h1>
+
+  <div class="notifications-grid">
+    <div class="card-soft notify-card">
+      <h2 class="notify-title">Notification Preferences</h2>
+
+      <div class="notify-row">
+        <p class="notify-label">Vet Appointments</p>
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input" type="checkbox" role="switch" checked style="width:2.7rem;height:1.4rem;">
+        </div>
+      </div>
+
+      <div class="notify-row">
+        <p class="notify-label">Vaccination Reminders</p>
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input" type="checkbox" role="switch" checked style="width:2.7rem;height:1.4rem;">
+        </div>
+      </div>
+
+      <div class="notify-row">
+        <p class="notify-label">Community Activity</p>
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input" type="checkbox" role="switch" checked style="width:2.7rem;height:1.4rem;">
+        </div>
+      </div>
+
+      <div class="notify-row">
+        <p class="notify-label">Lost &amp; Found Alerts</p>
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input" type="checkbox" role="switch" checked style="width:2.7rem;height:1.4rem;">
+        </div>
+      </div>
+
+      <div class="notify-row">
+        <p class="notify-label">Adoption Updates</p>
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input" type="checkbox" role="switch" checked style="width:2.7rem;height:1.4rem;">
+        </div>
+      </div>
+
+      <div class="notify-row">
+        <p class="notify-label">SOS &amp; Emergency</p>
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input" type="checkbox" role="switch" checked style="width:2.7rem;height:1.4rem;">
+        </div>
+      </div>
+    </div>
+
+    <div class="card-soft notify-card">
+      <h2 class="notify-title">Recent Notifications</h2>
+      <div class="recent-list">
+        <div class="recent-item">
+          <div class="recent-icon"><i class="fas fa-calendar-check"></i></div>
+          <p class="recent-text">Appointment Tomorrow</p>
+        </div>
+        <div class="recent-item">
+          <div class="recent-icon"><i class="fas fa-syringe"></i></div>
+          <p class="recent-text">Vaccine Due Soon</p>
+        </div>
+        <div class="recent-item">
+          <div class="recent-icon"><i class="fas fa-map-marker-alt"></i></div>
+          <p class="recent-text">Lost Pet Nearby</p>
+        </div>
+        <div class="recent-item">
+          <div class="recent-icon"><i class="fas fa-reply"></i></div>
+          <p class="recent-text">Community Reply</p>
+        </div>
+        <div class="recent-item">
+          <div class="recent-icon"><i class="fas fa-heart"></i></div>
+          <p class="recent-text">New Adoption Near You</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Login — PawNest{% endblock %}
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background:linear-gradient(135deg,#f8f4ff,#fff0f5);">
+  <div class="card-soft p-5" style="width:100%;max-width:440px;">
+    <div class="text-center mb-4">
+      <div style="width:52px;height:52px;background:linear-gradient(135deg,#E0527A,#9B5DE5);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 12px;"><img src="{% static '{css,js,images}/logo.png' %}" alt="PawNest" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;"></div>
+      <h2 style="font-family:'Playfair Display',serif;font-weight:700;">Welcome back 🌸</h2>
+      <p class="text-muted">Sign in to your PawNest account.</p>
+    </div>
+    {% if messages %}{% for m in messages %}<div class="alert alert-danger">{{ m }}</div>{% endfor %}{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3"><label class="form-label fw-semibold" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:#7A6E78;">Username</label><input class="form-control" type="text" name="username" placeholder="your_username" required/></div>
+      <div class="mb-3"><label class="form-label fw-semibold" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:#7A6E78;">Password</label><input class="form-control" type="password" name="password" placeholder="Your password" required/></div>
+      <button type="submit" class="btn btn-pill btn-rose w-100 mt-2" style="background:linear-gradient(135deg,#E0527A,#C73D62);color:#fff;border:none;padding:14px;border-radius:999px;font-weight:700;">Sign In 🐾</button>
+    </form>
+    <p class="text-center mt-3" style="font-size:.88rem;color:#7A6E78;">Don't have an account? <a href="{% url 'signup' %}" style="color:#E0527A;font-weight:600;">Create one</a></p>
+  </div>
+</div>
+{% endblock %}

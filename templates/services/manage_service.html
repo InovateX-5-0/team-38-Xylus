@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Manage Service — PawNest{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:640px;">
+  <div class="section-tag">🛠️ Service Profile</div>
+  <h2 class="page-header mb-4">{% if service %}Update{% else %}Set Up{% endif %} Your Service</h2>
+  <div class="card-soft p-4">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-12"><label class="form-label fw-semibold">Business Name *</label>{{ form.name }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Provider Type *</label>{{ form.provider_type }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Provider ID File</label>{{ form.provider_id_file }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Description</label>{{ form.description }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Address *</label>{{ form.address }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">City *</label>{{ form.city }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">Phone *</label>{{ form.phone }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Email</label>{{ form.email }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">Price Range</label>{{ form.price_range }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">Working Hours</label>{{ form.working_hours }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Photo</label>{{ form.photo }}</div>
+      </div>
+      <div class="d-flex gap-3 mt-4">
+        <button type="submit" class="btn btn-pill btn-rose flex-grow-1">Save Service 🛠️</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-pill btn-ghost">Back</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}PawNest 🐾{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+{% load static %}
+<link rel="icon" type="image/png" href="{% static '{css,js,images}/logo.png' %}">
+<link rel="manifest" href="{% static 'manifest.json' %}">
+<meta name="theme-color" content="#2ecc71">
+<style>
+:root {
+  --rose: #E0527A; --rose-dark: #C73D62; --violet: #9B5DE5;
+  --lavender: #C77DFF; --cream: #FAF8F5; --cream-dark: #F2EDE8;
+  --ink: #1A1220; --muted: #7A6E78;
+  --mint: #B8EDE4; --peach: #FFD6C2; --sky: #C2DEFF;
+  --card-radius: 18px; --transition: all 0.25s ease;
+}
+*,*::before,*::after{box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+.navbar{background:rgba(250,248,245,0.92)!important;backdrop-filter:blur(16px);border-bottom:1px solid rgba(224,82,122,0.1);padding:14px 0;}
+.navbar-brand{font-family:'Playfair Display',serif;font-weight:900;font-size:1.4rem;color:var(--ink)!important;display:flex;align-items:center;gap:10px;}
+.brand-icon{width:34px;height:34px;background:transparent;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;box-shadow:none;}
+.nav-link{color:var(--muted)!important;font-weight:500;font-size:0.9rem;transition:var(--transition);}
+.nav-link:hover,.nav-link.active{color:var(--rose)!important;}
+.btn-pill{border-radius:999px;font-weight:600;padding:10px 24px;font-family:'DM Sans',sans-serif;transition:var(--transition);border:none;}
+.btn-rose{background:linear-gradient(135deg,var(--rose),var(--rose-dark));color:#fff;box-shadow:0 4px 16px rgba(224,82,122,0.35);}
+.btn-rose:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(224,82,122,0.45);color:#fff;}
+.btn-outline-rose{border:1.5px solid var(--rose);color:var(--rose);background:transparent;}
+.btn-outline-rose:hover{background:var(--rose);color:#fff;}
+.card-soft{background:#fff;border-radius:var(--card-radius);border:1px solid rgba(155,93,229,0.07);box-shadow:0 4px 20px rgba(0,0,0,0.06);transition:var(--transition);}
+.card-soft:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(155,93,229,0.13);}
+.badge-healthy{background:#d1fae5;color:#065f46;}
+.badge-needs_vaccine{background:#fee2e2;color:#991b1b;}
+.badge-sick{background:#fef3c7;color:#92400e;}
+.badge-under_treatment{background:#dbeafe;color:#1e40af;}
+.badge-pending{background:#fef3c7;color:#92400e;}
+.badge-approved{background:#d1fae5;color:#065f46;}
+.badge-rejected{background:#fee2e2;color:#991b1b;}
+.badge-completed{background:#dbeafe;color:#1e40af;}
+.badge-confirmed{background:#d1fae5;color:#065f46;}
+.badge-cancelled{background:#fee2e2;color:#991b1b;}
+.badge-denied{background:#fee2e2;color:#991b1b;}
+.badge-available{background:#d1fae5;color:#065f46;}
+.badge-adopted{background:#dbeafe;color:#1e40af;}
+.status-badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:0.78rem;font-weight:600;}
+.sos-btn{position:relative;background:linear-gradient(135deg,#E0527A,#C73D62);color:#fff;border:none;border-radius:999px;padding:8px 20px;font-weight:700;font-size:0.88rem;box-shadow:0 4px 14px rgba(224,82,122,0.4);animation:sosPulse 2s infinite;transition:all .3s ease;text-decoration:none;}
+.sos-btn:hover{color:#fff;box-shadow:0 6px 28px rgba(224,82,122,0.65);transform:translateY(-1px);}
+.sos-dot{position:absolute;top:-2px;right:-2px;width:10px;height:10px;background:#ff4757;border-radius:50%;border:2px solid #fff;animation:sosDot 1.5s infinite;}
+@keyframes sosPulse{0%,100%{box-shadow:0 4px 14px rgba(224,82,122,0.4);}50%{box-shadow:0 4px 24px rgba(224,82,122,0.7);}}
+@keyframes sosDot{0%,100%{opacity:1;}50%{opacity:.4;}}
+.sidebar{width:240px;background:#fff;border-right:1px solid rgba(155,93,229,0.1);min-height:calc(100vh - 64px);padding:24px 0;}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:12px 24px;color:var(--muted);font-weight:500;text-decoration:none;border-radius:0 999px 999px 0;margin-right:16px;transition:var(--transition);}
+.sidebar-link:hover,.sidebar-link.active{background:linear-gradient(135deg,rgba(224,82,122,0.1),rgba(155,93,229,0.1));color:var(--rose);}
+.sidebar-link i{width:20px;text-align:center;}
+.hamburger-btn{background:transparent;border:none;color:var(--ink);font-size:1.5rem;line-height:1;padding:4px 8px;border-radius:10px;transition:var(--transition);}
+.hamburger-btn:hover{background:rgba(224,82,122,0.08);color:var(--rose);}
+.nav-drawer-backdrop{position:fixed;inset:0;background:rgba(26,18,32,.24);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:var(--transition);z-index:1040;}
+.nav-drawer{position:fixed;top:0;left:0;width:300px;max-width:86vw;height:100vh;background:#fff;border-right:1px solid rgba(155,93,229,0.1);box-shadow:0 10px 34px rgba(26,18,32,.16);border-radius:0 22px 22px 0;transform:translateX(-105%);transition:var(--transition);z-index:1041;display:flex;flex-direction:column;}
+.nav-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 14px;border-bottom:1px solid rgba(155,93,229,0.1);}
+.nav-drawer-close{background:transparent;border:none;color:var(--muted);font-size:1.4rem;line-height:1;padding:4px 8px;border-radius:10px;transition:var(--transition);}
+.nav-drawer-close:hover{background:rgba(224,82,122,0.08);color:var(--rose);}
+.nav-drawer-links{padding:16px 0;overflow-y:auto;}
+body.nav-open .nav-drawer-backdrop{opacity:1;pointer-events:auto;}
+body.nav-open .nav-drawer{transform:translateX(0);}
+.main-content{flex:1;padding:28px;}
+.page-header{font-family:'Playfair Display',serif;font-weight:700;font-size:1.8rem;margin-bottom:4px;}
+.section-tag{display:inline-block;background:linear-gradient(135deg,rgba(224,82,122,0.12),rgba(155,93,229,0.12));border:1px solid rgba(224,82,122,0.2);color:var(--rose);font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;border-radius:999px;margin-bottom:12px;}
+.form-control,.form-select{border-radius:12px;border:1.5px solid rgba(26,18,32,0.1);padding:12px 16px;font-family:'DM Sans',sans-serif;transition:var(--transition);}
+.form-control:focus,.form-select:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(224,82,122,0.12);}
+.alert{border-radius:14px;border:none;}
+.alert-success{background:#d1fae5;color:#065f46;}
+.alert-error,.alert-danger{background:#fee2e2;color:#991b1b;}
+.alert-warning{background:#fef3c7;color:#92400e;}
+footer.site-footer{background:var(--ink);color:rgba(255,255,255,0.6);padding:32px 0;text-align:center;font-size:0.88rem;margin-top:auto;}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body class="d-flex flex-column">
+
+{% if user.is_authenticated %}
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container-fluid px-4">
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="hamburger-btn" id="navHamburgerBtn" aria-label="Open menu">☰</button>
+      <a class="navbar-brand" href="{% url 'home' %}">
+        <div class="brand-icon"><img src="{% static '{css,js,images}/logo.png' %}" alt="fluffbud" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;"></div> fluffbud
+      </a>
+    </div>
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <a href="#" class="sos-btn" data-bs-toggle="modal" data-bs-target="#emergencySOSModal"><span class="sos-dot"></span>🚨 SOS</a>
+      <div class="dropdown">
+          <button class="btn btn-pill btn-outline-rose dropdown-toggle" data-bs-toggle="dropdown">
+            🐱 {{ user.first_name|default:user.username }}
+          </button>
+          <div class="dropdown-menu dropdown-menu-end p-0 border-0" style="width:260px;border-radius:16px;box-shadow:0 8px 32px rgba(26,18,32,.12);overflow:hidden;margin-top:8px;">
+            <!-- User Info Header -->
+            <div style="padding:20px 20px 16px;background:linear-gradient(135deg,rgba(224,82,122,.06),rgba(155,93,229,.06));">
+              <div class="d-flex align-items-center gap-3">
+                <div style="width:42px;height:42px;background:linear-gradient(135deg,#E0527A,#9B5DE5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;">{{ user.first_name|default:user.username|make_list|first|upper }}</div>
+                <div>
+                  <div class="fw-bold" style="font-size:.9rem;color:var(--ink);">{{ user.get_full_name|default:user.username }}</div>
+                  <div style="font-size:.78rem;color:#7A6E78;">{{ user.email|default:"No email set" }}</div>
+                </div>
+              </div>
+            </div>
+            <!-- Menu Items -->
+            <div style="padding:8px 10px;">
+              <a href="{% url 'profile' %}" class="d-flex align-items-center gap-3 px-3 py-2 rounded-3 text-decoration-none" style="color:var(--ink);transition:var(--transition);" onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background='transparent'">
+                <i class="fas fa-user" style="width:18px;text-align:center;color:#9B5DE5;font-size:.88rem;"></i>
+                <span style="font-size:.88rem;font-weight:500;">My Profile</span>
+              </a>
+              <a href="{% url 'settings' %}" class="d-flex align-items-center gap-3 px-3 py-2 rounded-3 text-decoration-none" style="color:var(--ink);transition:var(--transition);" onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background='transparent'">
+                <i class="fas fa-cog" style="width:18px;text-align:center;color:#9B5DE5;font-size:.88rem;"></i>
+                <span style="font-size:.88rem;font-weight:500;">Settings</span>
+              </a>
+              <a href="{% url 'notifications' %}" class="d-flex align-items-center gap-3 px-3 py-2 rounded-3 text-decoration-none" style="color:var(--ink);transition:var(--transition);" onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background='transparent'">
+                <i class="fas fa-bell" style="width:18px;text-align:center;color:#9B5DE5;font-size:.88rem;"></i>
+                <span style="font-size:.88rem;font-weight:500;">Notifications</span>
+              </a>
+            </div>
+            <!-- Divider -->
+            <div style="margin:0 16px;border-top:1px solid rgba(155,93,229,.1);"></div>
+            <!-- Sign Out -->
+            <div style="padding:8px 10px 12px;">
+              <a href="{% url 'logout' %}" class="d-flex align-items-center gap-3 px-3 py-2 rounded-3 text-decoration-none" style="color:#E0527A;transition:var(--transition);" onmouseover="this.style.background='#FFF5F8'" onmouseout="this.style.background='transparent'">
+                <i class="fas fa-sign-out-alt" style="width:18px;text-align:center;font-size:.88rem;"></i>
+                <span style="font-size:.88rem;font-weight:600;">Sign Out</span>
+              </a>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="nav-drawer-backdrop" id="navDrawerBackdrop"></div>
+<aside class="nav-drawer" id="navDrawer" aria-hidden="true">
+  <div class="nav-drawer-header">
+    <a class="navbar-brand m-0" href="{% url 'home' %}">
+      <div class="brand-icon"><img src="{% static '{css,js,images}/logo.png' %}" alt="fluffbud" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;"></div> fluffbud
+    </a>
+    <button type="button" class="nav-drawer-close" id="navDrawerCloseBtn" aria-label="Close menu">×</button>
+  </div>
+  <div class="nav-drawer-links">
+    <a class="sidebar-link" href="{% url 'dashboard' %}"><i class="fas fa-home"></i>Home</a>
+    <a class="sidebar-link" href="{% url 'pet_list' %}"><i class="fas fa-syringe"></i>Vaccinations</a>
+    {% if user.role == 'owner' %}
+    <a class="sidebar-link" href="{% url 'stores' %}"><i class="fas fa-store"></i>Stores</a>
+    {% endif %}
+    <a class="sidebar-link" href="{% url 'appointments' %}"><i class="fas fa-calendar-check"></i>Vet Appointments</a>
+    <a class="sidebar-link" href="{% url 'adoption' %}"><i class="fas fa-heart"></i>Pet Adoption</a>
+    <a class="sidebar-link" href="{% url 'lost_found' %}"><i class="fas fa-search"></i>Lost &amp; Found</a>
+    <a class="sidebar-link" href="{% url 'community' %}"><i class="fas fa-users"></i>Pet Community</a>
+    <a class="sidebar-link" href="#" data-bs-toggle="modal" data-bs-target="#serviceProviderLoginModal"><i class="fas fa-id-badge"></i>Service Providers</a>
+    <a class="sidebar-link" href="{% url 'about' %}"><i class="fas fa-info-circle"></i>About Us</a>
+  </div>
+</aside>
+{% endif %}
+
+<!-- EMERGENCY SOS MODAL -->
+<div class="modal fade" id="emergencySOSModal" tabindex="-1" aria-labelledby="emergencySOSLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:540px;">
+    <div class="modal-content border-0" style="border-radius:var(--card-radius);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));padding:32px 32px 24px;">
+        <div class="text-center">
+          <div style="width:64px;height:64px;background:linear-gradient(135deg,#E0527A,#C73D62);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px;box-shadow:0 6px 24px rgba(224,82,122,.4);animation:sosPulse 2s infinite;">🚨</div>
+          <h4 id="emergencySOSLabel" style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:4px;">Emergency SOS</h4>
+          <p style="font-size:.85rem;color:#7A6E78;margin:0;">Get immediate help for your pet</p>
+        </div>
+      </div>
+      <div style="padding:24px 32px 28px;">
+        <!-- ACTION BUTTONS -->
+        <div class="row g-2 mb-4">
+          <div class="col-6">
+            <a href="tel:+1800PETHELP" class="card-soft p-3 d-flex flex-column align-items-center text-center text-decoration-none" style="transition:var(--transition);cursor:pointer;">
+              <div style="width:44px;height:44px;background:linear-gradient(135deg,#E0527A,#C73D62);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:8px;box-shadow:0 4px 12px rgba(224,82,122,.3);">📞</div>
+              <div class="fw-semibold" style="font-size:.85rem;color:var(--ink);">Call Emergency Vet</div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a href="{% url 'emergency' %}" class="card-soft p-3 d-flex flex-column align-items-center text-center text-decoration-none" style="transition:var(--transition);cursor:pointer;">
+              <div style="width:44px;height:44px;background:linear-gradient(135deg,#9B5DE5,#7B3FC4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:8px;box-shadow:0 4px 12px rgba(155,93,229,.3);">🏥</div>
+              <div class="fw-semibold" style="font-size:.85rem;color:var(--ink);">Find Nearest Clinic</div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a href="tel:+1800PETHELP" class="card-soft p-3 d-flex flex-column align-items-center text-center text-decoration-none" style="transition:var(--transition);cursor:pointer;">
+              <div style="width:44px;height:44px;background:linear-gradient(135deg,#ff9500,#e08600);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:8px;box-shadow:0 4px 12px rgba(255,149,0,.3);">🚑</div>
+              <div class="fw-semibold" style="font-size:.85rem;color:var(--ink);">Pet Ambulance</div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a href="#" class="card-soft p-3 d-flex flex-column align-items-center text-center text-decoration-none" style="transition:var(--transition);cursor:pointer;">
+              <div style="width:44px;height:44px;background:linear-gradient(135deg,#34c48a,#28a070);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:8px;box-shadow:0 4px 12px rgba(52,196,138,.3);">💬</div>
+              <div class="fw-semibold" style="font-size:.85rem;color:var(--ink);">Live Vet Chat</div>
+            </a>
+          </div>
+        </div>
+
+        <!-- NEAREST 24HR VET -->
+        <div class="card-soft p-3 mb-3" style="border-left:4px solid #E0527A;">
+          <div class="d-flex align-items-center gap-3">
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#FFE8F0,#F5EEFF);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">📍</div>
+            <div class="flex-grow-1">
+              <div style="font-size:.75rem;color:#7A6E78;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Nearest 24hr Vet</div>
+              <div class="fw-bold" style="font-size:.92rem;">PetCare Emergency Clinic — <span style="color:#E0527A;">0.8 km</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HOTLINE -->
+        <div class="card-soft p-3 mb-4" style="border-left:4px solid #9B5DE5;">
+          <div class="d-flex align-items-center gap-3">
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#F5EEFF,#FFE8F0);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">☎️</div>
+            <div class="flex-grow-1">
+              <div style="font-size:.75rem;color:#7A6E78;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Hotline</div>
+              <div class="fw-bold" style="font-size:.92rem;"><a href="tel:+1800738435" style="color:var(--ink);text-decoration:none;">+1 800 PET HELP</a></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CLOSE BUTTON -->
+        <button type="button" class="btn btn-pill btn-ghost w-100" data-bs-dismiss="modal" style="padding:12px;font-weight:600;">Close</button>
+      </div>
+      <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:16px;right:16px;"></button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICE PROVIDER LOGIN MODAL -->
+<div class="modal fade" id="serviceProviderLoginModal" tabindex="-1" aria-labelledby="serviceProviderLoginLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:520px;">
+    <div class="modal-content border-0" style="border-radius:var(--card-radius);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));padding:32px 32px 24px;">
+        <div class="text-center">
+          <div style="width:52px;height:52px;background:linear-gradient(135deg,#E0527A,#9B5DE5);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 12px;">🛠️</div>
+          <h4 style="font-family:'Playfair Display',serif;font-weight:700;" id="serviceProviderLoginLabel">Service Provider Portal</h4>
+          <p class="text-muted" style="font-size:.88rem;">Manage your pet care business</p>
+        </div>
+      </div>
+      <div style="padding:24px 32px 32px;">
+        <form method="post" action="{% url 'provider_portal' %}" enctype="multipart/form-data" id="spForm">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:#7A6E78;">Full Name</label>
+          <input class="form-control" type="text" name="full_name" placeholder="Dr. Jane Smith" required/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:#7A6E78;">Email Address</label>
+          <input class="form-control" type="email" name="email" placeholder="you@example.com" required/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:#7A6E78;">I am a...</label>
+          <div class="row g-2 mt-1">
+            <div class="col-6">
+              <div class="sp-type-card card-soft p-3 text-center" data-type="vet" style="cursor:pointer;border:2px solid transparent;transition:var(--transition);">
+                <div style="font-size:28px;margin-bottom:6px;">🩺</div>
+                <div class="fw-semibold" style="font-size:.88rem;">Vet Clinic</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="sp-type-card card-soft p-3 text-center" data-type="shelter" style="cursor:pointer;border:2px solid transparent;transition:var(--transition);">
+                <div style="font-size:28px;margin-bottom:6px;">🏠</div>
+                <div class="fw-semibold" style="font-size:.88rem;">Shelter</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="sp-type-card card-soft p-3 text-center" data-type="store" style="cursor:pointer;border:2px solid transparent;transition:var(--transition);">
+                <div style="font-size:28px;margin-bottom:6px;">🛒</div>
+                <div class="fw-semibold" style="font-size:.88rem;">Pet Store</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="sp-type-card card-soft p-3 text-center" data-type="groomer" style="cursor:pointer;border:2px solid transparent;transition:var(--transition);">
+                <div style="font-size:28px;margin-bottom:6px;">✂️</div>
+                <div class="fw-semibold" style="font-size:.88rem;">Groomer</div>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" name="provider_type" id="spTypeInput" value=""/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:#7A6E78;">Upload Provider ID</label>
+          <div id="spUploadArea" style="border:2px dashed rgba(155,93,229,.25);border-radius:14px;padding:20px;text-align:center;cursor:pointer;transition:var(--transition);background:#FAF8F5;" onclick="document.getElementById('spFileInput').click();">
+            <div class="text-center">
+              <div style="font-size:28px;margin-bottom:6px;">📄</div>
+              <div class="fw-semibold" style="font-size:.88rem;color:var(--ink);">Click to upload</div>
+              <div style="font-size:.78rem;color:#7A6E78;margin-top:4px;">PDF, JPG, PNG accepted</div>
+            </div>
+          </div>
+          <input type="file" id="spFileInput" name="provider_id_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;"/>
+          <div id="spFileStatus" style="display:none;margin-top:10px;padding:10px 14px;border-radius:12px;background:#d1fae5;color:#065f46;font-weight:600;font-size:.85rem;">
+            <span style="margin-right:4px;">✔</span> Verified
+          </div>
+          <div style="margin-top:10px;padding:12px;background:#FAF8F5;border-radius:12px;">
+            <div class="fw-semibold" style="font-size:.78rem;color:#7A6E78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Example Provider IDs</div>
+            <div style="font-size:.82rem;color:#555;line-height:1.7;">
+              • Veterinary license<br/>
+              • Shelter registration certificate<br/>
+              • Pet store business ID
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-pill w-100 mt-2" style="background:linear-gradient(135deg,#ccc,#bbb);color:#fff;border:none;padding:14px;border-radius:999px;font-weight:700;cursor:not-allowed;opacity:.65;" id="spContinueBtn" disabled>Enter Dashboard →</button>
+        <p class="text-center mt-3 mb-0" style="font-size:.88rem;color:#7A6E78;">Already registered? <a href="{% url 'login' %}" style="color:#E0527A;font-weight:600;">Sign in here</a></p>
+        </form>
+      </div>
+      <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:16px;right:16px;"></button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var cards=document.querySelectorAll('.sp-type-card');
+  var hiddenInput=document.getElementById('spTypeInput');
+  var fileInput=document.getElementById('spFileInput');
+  var uploadArea=document.getElementById('spUploadArea');
+  var fileStatus=document.getElementById('spFileStatus');
+  var continueBtn=document.getElementById('spContinueBtn');
+
+  cards.forEach(function(card){
+    card.addEventListener('click',function(){
+      cards.forEach(function(c){c.style.borderColor='transparent';c.style.background='#fff';});
+      card.style.borderColor='#E0527A';
+      card.style.background='linear-gradient(135deg,rgba(224,82,122,.06),rgba(155,93,229,.06))';
+      hiddenInput.value=card.getAttribute('data-type');
+    });
+  });
+
+  fileInput.addEventListener('change',function(){
+    if(fileInput.files&&fileInput.files.length>0){
+      var file=fileInput.files[0];
+      var allowed=['application/pdf','image/jpeg','image/png'];
+      if(allowed.indexOf(file.type)===-1){
+        uploadArea.querySelector('.fw-semibold').textContent='Invalid file type';
+        uploadArea.style.borderColor='#E0527A';
+        return;
+      }
+      uploadArea.style.borderColor='#065f46';
+      uploadArea.style.background='#d1fae5';
+      uploadArea.querySelector('div[style*="font-size:28px"]').textContent='📎';
+      uploadArea.querySelector('.fw-semibold').textContent=file.name;
+      uploadArea.querySelector('div[style*="font-size:.78rem"]').textContent=(file.size/1024).toFixed(1)+' KB';
+      fileStatus.style.display='block';
+      continueBtn.disabled=false;
+      continueBtn.style.background='linear-gradient(135deg,#E0527A,#C73D62)';
+      continueBtn.style.cursor='pointer';
+      continueBtn.style.opacity='1';
+    }
+  });
+})();
+
+(function(){
+  var hamburgerBtn=document.getElementById('navHamburgerBtn');
+  var drawer=document.getElementById('navDrawer');
+  var closeBtn=document.getElementById('navDrawerCloseBtn');
+  var backdrop=document.getElementById('navDrawerBackdrop');
+
+  if(!hamburgerBtn||!drawer||!closeBtn||!backdrop){return;}
+
+  function openDrawer(){
+    document.body.classList.add('nav-open');
+    drawer.setAttribute('aria-hidden','false');
+  }
+
+  function closeDrawer(){
+    document.body.classList.remove('nav-open');
+    drawer.setAttribute('aria-hidden','true');
+  }
+
+  hamburgerBtn.addEventListener('click',openDrawer);
+  closeBtn.addEventListener('click',closeDrawer);
+  backdrop.addEventListener('click',closeDrawer);
+
+  drawer.querySelectorAll('a').forEach(function(link){
+    link.addEventListener('click',closeDrawer);
+  });
+})();
+</script>
+
+<!-- MESSAGES -->
+{% if messages %}
+<div class="container-fluid px-4 mt-3">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+    {{ message }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- MAIN -->
+<main class="flex-grow-1">
+  {% block content %}{% endblock %}
+</main>
+
+{% if user.is_authenticated and user.is_service_provider %}
+<footer class="site-footer">
+  <div class="container" style="text-align:left;max-width:1140px;">
+    <div class="row g-4" style="padding-bottom:20px;">
+      <div class="col-12 col-md-4">
+        <h5 style="font-family:'Playfair Display',serif;font-weight:700;color:#fff;margin-bottom:10px;">fluffbud</h5>
+        <p style="margin:0;color:rgba(255,255,255,0.7);font-size:.88rem;line-height:1.6;max-width:320px;">Connecting pet care professionals with the community they serve.</p>
+      </div>
+      <div class="col-6 col-md-2">
+        <div style="font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);font-weight:600;margin-bottom:10px;">Platform</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="{% url 'dashboard' %}" style="color:rgba(255,255,255,0.78);text-decoration:none;font-size:.86rem;">Pet Owner Dashboard</a>
+          <a href="{% url 'provider_portal' %}" style="color:rgba(255,255,255,0.78);text-decoration:none;font-size:.86rem;">Provider Portal</a>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div style="font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);font-weight:600;margin-bottom:10px;">Company</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="{% url 'about' %}" style="color:rgba(255,255,255,0.78);text-decoration:none;font-size:.86rem;">About Us</a>
+          <a href="#" style="color:rgba(255,255,255,0.78);text-decoration:none;font-size:.86rem;">Careers</a>
+          <a href="#" style="color:rgba(255,255,255,0.78);text-decoration:none;font-size:.86rem;">Press</a>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div style="font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);font-weight:600;margin-bottom:10px;">Support</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="#" style="color:rgba(255,255,255,0.78);text-decoration:none;font-size:.86rem;">Help Center</a>
+          <a href="#" style="color:rgba(255,255,255,0.78);text-decoration:none;font-size:.86rem;">Contact</a>
+          <a href="#" style="color:rgba(255,255,255,0.78);text-decoration:none;font-size:.86rem;">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.14);padding-top:14px;color:rgba(255,255,255,0.62);font-size:.84rem;text-align:center;">
+      © 2026 fluffbud · Made with 🐾 for pet lovers everywhere.
+    </div>
+  </div>
+</footer>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/js/serviceworker.js")
+    .then(() => console.log("Service Worker Registered"));
+}
+</script>
+</body>
+</html>

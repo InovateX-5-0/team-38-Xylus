@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Adoption — PawNest{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div><div class="section-tag">🏠 Adoption</div><h2 class="page-header">Find your forever friend</h2></div>
+    {% if user.is_authenticated and user.role == 'shelter' %}<a href="{% url 'add_adoption_listing' %}" class="btn btn-pill btn-rose">+ Add Listing</a>{% endif %}
+  </div>
+
+  <!-- Filter -->
+  <div class="card-soft p-3 mb-4">
+    <form method="get" class="d-flex gap-3 align-items-center flex-wrap">
+      <input class="form-control" type="text" name="species" value="{{ species_filter }}" placeholder="Filter by species (dog, cat...)" style="max-width:240px;"/>
+      <button type="submit" class="btn btn-pill btn-rose">Filter</button>
+      {% if species_filter %}<a href="{% url 'adoption' %}" class="btn btn-pill btn-ghost">Clear</a>{% endif %}
+    </form>
+  </div>
+
+  <div class="row g-4">
+    {% for listing in listings %}
+    <div class="col-md-4 col-lg-3">
+      <div class="card-soft p-0 overflow-hidden h-100">
+        {% if listing.photo %}<img src="{{ listing.photo.url }}" style="width:100%;height:180px;object-fit:cover;"/>
+        {% else %}<div style="width:100%;height:180px;background:linear-gradient(135deg,#FFE8F0,#F5EEFF);display:flex;align-items:center;justify-content:center;font-size:64px;">{% if listing.species|lower == 'cat' %}🐱{% elif listing.species|lower == 'dog' %}🐶{% else %}🐾{% endif %}</div>{% endif %}
+        <div class="p-3">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <h5 class="fw-bold mb-0">{{ listing.name }}</h5>
+            <span class="status-badge" style="background:#d1fae5;color:#065f46;font-size:.72rem;">{{ listing.get_size_display }}</span>
+          </div>
+          <p style="font-size:.82rem;color:#7A6E78;margin-bottom:8px;">{{ listing.species }} · {{ listing.age_display }} · {{ listing.get_gender_display }}</p>
+          <p style="font-size:.85rem;color:#555;margin-bottom:10px;">{{ listing.description|truncatechars:70 }}</p>
+          <div class="d-flex gap-2 mb-3">
+            <span style="font-size:.72rem;background:#d1fae5;color:#065f46;padding:3px 8px;border-radius:999px;font-weight:600;">💉 {{ listing.get_vaccination_status_display }}</span>
+            <span style="font-size:.72rem;background:#dbeafe;color:#1e40af;padding:3px 8px;border-radius:999px;font-weight:600;">🩺 {{ listing.get_health_status_display }}</span>
+          </div>
+          <div style="font-size:.8rem;color:#7A6E78;margin-bottom:12px;">📍 {{ listing.rescue_location }}</div>
+          {% if user.is_authenticated and user.role == 'owner' %}
+          <a href="{% url 'adoption_request' listing.pk %}" class="btn btn-pill btn-rose w-100" style="font-size:.88rem;">Adopt {{ listing.name }} 🐾</a>
+          {% elif not user.is_authenticated %}
+          <a href="{% url 'login' %}" class="btn btn-pill btn-ghost w-100" style="font-size:.88rem;">Login to Adopt</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted"><div style="font-size:64px;">🐾</div><p>No pets available for adoption right now.</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

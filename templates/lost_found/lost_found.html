@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Lost & Found — PawNest{% endblock %}
+{% block extra_css %}
+<style>
+.photo-placeholder{width:100%;height:160px;display:flex;align-items:center;justify-content:center;font-size:56px;}
+.photo-placeholder-lost{background:linear-gradient(135deg,#fee2e2,#fef3c7);}
+.photo-placeholder-found{background:linear-gradient(135deg,#d1fae5,#dbeafe);}
+.badge-lost{background:#fee2e2;color:#991b1b;}
+.badge-found{background:#d1fae5;color:#065f46;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div><div class="section-tag">🔍 Lost & Found</div><h2 class="page-header">Help reunite pets & families</h2></div>
+    {% if user.is_authenticated %}<a href="{% url 'report_lost_found' %}" class="btn btn-pill btn-rose">+ Report</a>{% endif %}
+  </div>
+
+  <div class="d-flex gap-2 mb-4 flex-wrap">
+    <a href="{% url 'lost_found' %}" class="btn btn-pill {% if not filter_type %}btn-rose{% else %}btn-ghost{% endif %}">All</a>
+    <a href="?type=lost" class="btn btn-pill {% if filter_type == 'lost' %}btn-rose{% else %}btn-ghost{% endif %}">😢 Lost Pets</a>
+    <a href="?type=found" class="btn btn-pill {% if filter_type == 'found' %}btn-rose{% else %}btn-ghost{% endif %}">🎉 Found Pets</a>
+  </div>
+
+  <div class="row g-4">
+    {% for report in reports %}
+    <div class="col-md-4 col-lg-3">
+      <div class="card-soft p-0 overflow-hidden h-100">
+        {% if report.photo %}<img src="{{ report.photo.url }}" style="width:100%;height:160px;object-fit:cover;"/>
+        {% else %}<div class="photo-placeholder {% if report.report_type == 'lost' %}photo-placeholder-lost{% else %}photo-placeholder-found{% endif %}">🐾</div>{% endif %}
+        <div class="p-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="status-badge {% if report.report_type == 'lost' %}badge-lost{% else %}badge-found{% endif %}">{% if report.report_type == 'lost' %}😢 Lost{% else %}🎉 Found{% endif %}</span>
+            <span style="font-size:.78rem;color:#7A6E78;">{{ report.date_lost_found|date:"M d" }}</span>
+          </div>
+          <h6 class="fw-bold">{% if report.pet_name %}{{ report.pet_name }}{% else %}Unknown{% endif %}</h6>
+          <p style="font-size:.82rem;color:#7A6E78;margin-bottom:6px;">{{ report.species }}{% if report.breed %} · {{ report.breed }}{% endif %} · {{ report.color }}</p>
+          <p style="font-size:.83rem;color:#555;margin-bottom:8px;">{{ report.description|truncatechars:80 }}</p>
+          <div style="font-size:.8rem;color:#7A6E78;margin-bottom:8px;">📍 {{ report.location }}</div>
+          <div style="border-top:1px solid rgba(0,0,0,.06);padding-top:8px;margin-top:8px;">
+            <div style="font-size:.82rem;font-weight:600;">{{ report.contact_name }}</div>
+            <div style="font-size:.8rem;color:#E0527A;">📞 {{ report.contact_phone }}</div>
+          </div>
+          {% if user.is_authenticated and report.reporter == user %}
+          <form method="post" action="{% url 'mark_resolved' report.pk %}" class="mt-2">
+            {% csrf_token %}<button type="submit" class="btn btn-sm w-100 rounded-3" style="background:#d1fae5;color:#065f46;border:none;font-weight:600;font-size:.78rem;">Mark Resolved ✓</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted"><div style="font-size:64px;">🔍</div><p>No reports found. All pets are safe! 🐾</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

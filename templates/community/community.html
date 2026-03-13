@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Community — PawNest{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:680px;">
+  <div class="section-tag">👥 Community</div>
+  <h2 class="page-header mb-4">Pet Community 🐾</h2>
+
+  <!-- POST FORM -->
+  <div class="card-soft p-4 mb-4">
+    <div class="d-flex align-items-start gap-3">
+      <div style="width:42px;height:42px;background:linear-gradient(135deg,#E0527A,#9B5DE5);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.9rem;flex-shrink:0;">{{ user.first_name|first|upper }}</div>
+      <div class="flex-grow-1">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ post_form.content }}
+          <div class="d-flex align-items-center gap-3 mt-3">
+            <div class="flex-grow-1">{{ post_form.pet }}</div>
+            <div>{{ post_form.photo }}</div>
+            <button type="submit" name="post_content" class="btn btn-pill btn-rose">Post 🐾</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSTS FEED -->
+  {% for post in posts %}
+  <div class="card-soft p-4 mb-3">
+    <div class="d-flex align-items-start gap-3 mb-3">
+      <div style="width:42px;height:42px;background:linear-gradient(135deg,#FFE8F0,#F5EEFF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">{{ post.author.first_name|first|upper }}</div>
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="fw-semibold">{{ post.author.get_full_name|default:post.author.username }}</div>
+            {% if post.pet %}<div style="font-size:.78rem;color:#7A6E78;">with {{ post.pet.name }} 🐾</div>{% endif %}
+            {% if post.lost_found_report %}
+            <span class="status-badge" style="background:#fee2e2;color:#991b1b;font-size:.72rem;margin-top:4px;display:inline-block;">Lost &amp; Found Alert</span>
+            {% endif %}
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span style="font-size:.78rem;color:#7A6E78;">{{ post.created_at|timesince }} ago</span>
+            {% if post.author == user %}<form method="post" action="{% url 'delete_post' post.pk %}">{% csrf_token %}<button type="submit" class="btn btn-sm" style="background:none;border:none;color:#ccc;font-size:.8rem;" onclick="return confirm('Delete this post?')">✕</button></form>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin-bottom:12px;">{{ post.content }}</p>
+    {% if post.lost_found_report %}
+    <div class="p-3 rounded-3 mb-3" style="background:#FAF8F5;">
+      <div style="font-size:.82rem;color:#7A6E78;">Pet Name</div>
+      <div class="fw-semibold" style="font-size:.9rem;">{{ post.lost_found_report.pet_name|default:post.lost_found_report.species }}</div>
+      <div class="mt-2" style="font-size:.82rem;color:#7A6E78;">Location</div>
+      <div class="fw-semibold" style="font-size:.9rem;">{{ post.lost_found_report.location }}</div>
+      <div class="mt-2" style="font-size:.82rem;color:#7A6E78;">Report Type</div>
+      <div class="fw-semibold" style="font-size:.9rem;">{{ post.lost_found_report.get_report_type_display }}</div>
+    </div>
+    {% endif %}
+    {% if post.photo %}<img src="{{ post.photo.url }}" class="rounded-3 mb-3 w-100" style="max-height:320px;object-fit:cover;"/>{% endif %}
+
+    <div class="d-flex align-items-center gap-4">
+      <button class="like-btn d-flex align-items-center gap-2" data-post="{{ post.pk }}" style="background:none;border:none;cursor:pointer;font-size:.9rem;color:#7A6E78;">
+        <span class="like-icon">❤️</span>
+        <span class="like-count" id="likes-{{ post.pk }}">{{ post.like_count }}</span>
+      </button>
+      <button class="d-flex align-items-center gap-2" style="background:none;border:none;cursor:pointer;font-size:.9rem;color:#7A6E78;" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.pk }}">
+        💬 <span>{{ post.comment_count }}</span>
+      </button>
+    </div>
+
+    <!-- COMMENTS -->
+    <div class="collapse mt-3" id="comments-{{ post.pk }}">
+      {% for comment in post.comments.all %}
+      <div class="d-flex gap-2 mb-2">
+        <div style="width:28px;height:28px;background:#FAF8F5;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;">{{ comment.author.first_name|first|upper }}</div>
+        <div style="background:#FAF8F5;border-radius:12px;padding:8px 12px;flex-grow:1;">
+          <span class="fw-semibold" style="font-size:.82rem;">{{ comment.author.get_full_name|default:comment.author.username }}</span>
+          <p style="font-size:.85rem;margin:2px 0 0;">{{ comment.content }}</p>
+        </div>
+      </div>
+      {% endfor %}
+      <form method="post" action="{% url 'comment_post' post.pk %}" class="d-flex gap-2 mt-2">
+        {% csrf_token %}
+        {{ comment_form.content }}
+        <button type="submit" class="btn btn-pill btn-rose" style="padding:8px 18px;font-size:.85rem;">Send</button>
+      </form>
+    </div>
+  </div>
+  {% empty %}
+  <div class="text-center py-5 text-muted"><div style="font-size:64px;">🐾</div><p>Be the first to post!</p></div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.like-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    const id=this.dataset.post;
+    fetch(`/community/post/${id}/like/`,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}'}})
+    .then(r=>r.json()).then(d=>{
+      document.getElementById(`likes-${id}`).textContent=d.likes;
+      this.querySelector('.like-icon').textContent=d.liked?'❤️':'🤍';
+    });
+  });
+});
+</script>
+{% endblock %}

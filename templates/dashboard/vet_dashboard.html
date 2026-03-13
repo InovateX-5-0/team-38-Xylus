@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% block title %}Vet Dashboard — PawNest{% endblock %}
+{% block content %}
+<div style="background:linear-gradient(135deg,#f0f8ff 0%,#f5eeff 100%);min-height:calc(100vh - 64px);">
+  <div class="container-fluid py-4 px-4">
+
+    <!-- HEADER -->
+    <div class="card-soft p-4 mb-4" style="background:linear-gradient(135deg,rgba(94,159,229,.1),rgba(155,93,229,.1));">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <h1 style="font-family:'Playfair Display',serif;font-weight:700;font-size:1.9rem;">{% if clinic %}{{ clinic.clinic_name }}{% else %}My Clinic{% endif %} — Vet Clinic 🏥</h1>
+          <p class="text-muted mb-0">{% if clinic %}Dr. {{ user.get_full_name|default:user.username }} · {{ clinic.city }} · {{ clinic.working_hours }}{% else %}Set up your clinic profile to get started.{% endif %}</p>
+          {% if service_provider.is_verified %}<span style="display:inline-block;margin-top:8px;padding:4px 12px;border-radius:99px;background:#d1fae5;color:#065f46;font-weight:600;font-size:.82rem;">✔ Verified</span>{% endif %}
+        </div>
+        <div class="d-flex gap-2">
+          <a href="#" data-bs-toggle="modal" data-bs-target="#serviceProviderLoginModal" class="btn btn-pill" style="background:#fff;border:1.5px solid #9B5DE5;color:#9B5DE5;padding:10px 20px;border-radius:999px;font-weight:600;"><i class="fas fa-exchange-alt me-1"></i>Switch Account</a>
+          <a href="{% url 'manage_clinic' %}" class="btn btn-pill" style="background:#fff;border:1.5px solid #E0527A;color:#E0527A;padding:10px 20px;border-radius:999px;font-weight:600;">Manage Clinic</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- WIDGETS -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">📅</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#E0527A;">{{ appointments_today_count }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Appointments Today</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">🐾</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#9B5DE5;">{{ total_patients }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Total Patients</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">🪑</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#ff9500;">{{ waiting_room_count }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">In Waiting Room</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">💰</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#34c48a;">₹0</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Today's Revenue</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">⭐</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#E0527A;">{% if clinic %}{{ clinic.rating }}{% else %}—{% endif %}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Average Rating</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- TODAY'S SCHEDULE -->
+      <div class="col-lg-8">
+        <div class="card-soft p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">📅 Today's Schedule</h5>
+            <span class="status-badge" style="background:#E8F4FF;color:#1e40af;font-size:.78rem;">{{ appointments_today_count }} appointment{{ appointments_today_count|pluralize }}</span>
+          </div>
+          {% if todays_appointments %}
+          {% for appt in todays_appointments %}
+          <div class="d-flex align-items-center p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div class="me-3" style="min-width:60px;text-align:center;">
+              <div style="font-size:.88rem;font-weight:700;color:#E0527A;">{{ appt.time|time:"g:i A" }}</div>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2">
+                <span class="fw-semibold">{{ appt.pet.name }}</span>
+                <span style="font-size:.75rem;color:#7A6E78;">({{ appt.pet.species }})</span>
+              </div>
+              <div style="font-size:.82rem;color:#7A6E78;">{{ appt.owner.get_full_name|default:appt.owner.username }} · {{ appt.get_appointment_type_display }}</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="status-badge badge-{{ appt.status }}">{{ appt.get_status_display }}</span>
+              {% if appt.status == 'pending' %}
+              <a href="{% url 'update_appointment' appt.pk 'confirmed' %}" class="btn btn-sm rounded-pill px-3" style="background:#d1fae5;color:#065f46;font-weight:600;border:none;font-size:.78rem;">Add to Schedule</a>
+              <a href="{% url 'update_appointment' appt.pk 'cancelled' %}" class="btn btn-sm rounded-pill px-3" style="background:#fee2e2;color:#991b1b;font-weight:600;border:none;font-size:.78rem;">Cancel</a>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <div style="font-size:40px;">📭</div>
+            <p style="font-size:.88rem;">No appointments scheduled for today.</p>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- RECENT PATIENT RECORDS -->
+        <div class="card-soft p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">🩺 Recent Patient Records</h5>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm rounded-pill px-3" style="background:#fff;border:1.5px solid #9B5DE5;color:#9B5DE5;font-weight:600;" data-bs-toggle="modal" data-bs-target="#addPatientRecordModal">Add Record</button>
+              <a href="{% url 'all_patient_records' %}" class="btn btn-sm rounded-pill px-3" style="background:#fff;border:1.5px solid #E0527A;color:#E0527A;font-weight:600;">All Records</a>
+            </div>
+          </div>
+          {% if recent_records %}
+          {% for rec in recent_records %}
+          <div class="d-flex align-items-start p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div class="me-3" style="width:40px;height:40px;background:linear-gradient(135deg,#FFE8F0,#F5EEFF);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">🐾</div>
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <span class="fw-semibold">{{ rec.pet.name }}</span>
+                  <span style="font-size:.78rem;color:#7A6E78;"> — {{ rec.title }}</span>
+                </div>
+                <span style="font-size:.78rem;color:#7A6E78;">{{ rec.date|date:"M d, Y" }}</span>
+              </div>
+              <p style="font-size:.82rem;color:#555;margin:4px 0 0;">{{ rec.description|truncatechars:100 }}</p>
+              {% if rec.diagnosis %}
+              <span class="status-badge" style="background:#dbeafe;color:#1e40af;font-size:.72rem;margin-top:4px;display:inline-block;">{{ rec.diagnosis }}</span>
+              {% endif %}
+              {% if rec.medications %}
+              <span class="status-badge" style="background:#fef3c7;color:#92400e;font-size:.72rem;margin-top:4px;display:inline-block;">💊 {{ rec.medications|truncatechars:40 }}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <div style="font-size:40px;">📋</div>
+            <p style="font-size:.88rem;">No patient records yet.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="col-lg-4">
+        <!-- MEDICATIONS & STOCK -->
+        <div class="card-soft p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">💊 Medications & Stock</h5>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm rounded-pill px-3" style="background:#fff;border:1.5px solid #9B5DE5;color:#9B5DE5;font-weight:600;" data-bs-toggle="modal" data-bs-target="#addMedicineModal">Add Medicine Stock</button>
+              <button class="btn btn-sm rounded-pill px-3" style="background:#fff;border:1.5px solid #E0527A;color:#E0527A;font-weight:600;" data-bs-toggle="modal" data-bs-target="#reorderSuppliesModal">Reorder Supplies</button>
+            </div>
+          </div>
+          {% if medicine_items %}
+          {% for item in medicine_items %}
+          <div class="d-flex align-items-center p-3 rounded-3 {% if not forloop.last %}mb-2{% endif %}" style="background:#FAF8F5;">
+            <div style="width:36px;height:36px;background:#dbeafe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-right:12px;">💊</div>
+            <div class="flex-grow-1">
+              <div class="fw-semibold" style="font-size:.88rem;">{{ item.medicine_name }}</div>
+              <div style="font-size:.78rem;color:#7A6E78;">Qty: {{ item.quantity }} · {{ item.supplier_shop|default:"No supplier" }}</div>
+            </div>
+            {% if item.is_low_stock %}
+            <span class="status-badge" style="background:#fef3c7;color:#92400e;font-size:.72rem;">Low Stock</span>
+            {% else %}
+            <span class="status-badge" style="background:#d1fae5;color:#065f46;font-size:.72rem;">In Stock</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="text-center py-3 text-muted" style="font-size:.85rem;">No medicines added yet.</div>
+          {% endif %}
+        </div>
+
+        <!-- PENDING REQUESTS -->
+        <div class="card-soft p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">🔔 Pending Requests</h5>
+            <span class="status-badge" style="background:#fee2e2;color:#991b1b;font-size:.72rem;">{{ pending_count }}</span>
+          </div>
+          {% for appt in appointments %}
+          {% if appt.status == 'pending' %}
+          <div class="d-flex align-items-center p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div class="flex-grow-1">
+              <div class="fw-semibold" style="font-size:.88rem;">{{ appt.pet.name }}</div>
+              <div style="font-size:.78rem;color:#7A6E78;">{{ appt.owner.get_full_name|default:appt.owner.username }} · {{ appt.clinic.clinic_name|default:'Clinic' }}</div>
+              <div style="font-size:.78rem;color:#7A6E78;">{{ appt.date|date:"M d" }} · {{ appt.time|time:"g:i A" }} · {{ appt.reason|default:"General checkup"|truncatechars:38 }}</div>
+              {% if appt.appointment_type == 'vaccination' %}
+              <form method="post" action="{% url 'reschedule_appointment' appt.pk %}" class="d-flex gap-1 align-items-center mt-2">
+                {% csrf_token %}
+                <input type="date" name="new_date" class="form-control form-control-sm" style="max-width:125px;" required>
+                <input type="time" name="new_time" class="form-control form-control-sm" style="max-width:105px;" required>
+                <button type="submit" class="btn btn-sm rounded-pill px-2" style="background:#F5EEFF;color:#6d28d9;font-weight:600;border:none;font-size:.72rem;">Reschedule</button>
+              </form>
+              {% endif %}
+            </div>
+            <div class="d-flex gap-1">
+              <a href="{% url 'update_appointment' appt.pk 'confirmed' %}" class="btn btn-sm rounded-pill px-2" style="background:#d1fae5;color:#065f46;font-weight:600;border:none;font-size:.75rem;">✓</a>
+              <a href="{% url 'update_appointment' appt.pk 'cancelled' %}" class="btn btn-sm rounded-pill px-2" style="background:#fee2e2;color:#991b1b;font-weight:600;border:none;font-size:.75rem;">✗</a>
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+          {% if pending_count == 0 %}
+          <div class="text-center py-3 text-muted" style="font-size:.85rem;">No pending requests 🎉</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  var modalEl=document.getElementById('bookingRequestModal');
+  if(!modalEl){return;}
+  var bookingModal=new bootstrap.Modal(modalEl);
+  var activeId=null;
+
+  function fillModal(data){
+    document.getElementById('bookingRequestPet').textContent=data.pet_name;
+    document.getElementById('bookingRequestOwner').textContent=data.owner_name;
+    document.getElementById('bookingRequestClinic').textContent=data.clinic_name;
+    document.getElementById('bookingRequestDate').textContent=data.date;
+    document.getElementById('bookingRequestTime').textContent=data.time;
+    document.getElementById('bookingRequestReason').textContent=data.reason;
+  }
+
+  function checkRequests(){
+    fetch('{% url "next_booking_request" %}', {headers:{'X-Requested-With':'XMLHttpRequest'}})
+      .then(function(res){return res.json();})
+      .then(function(data){
+        if(!data.found){return;}
+        if(activeId===data.id){return;}
+        activeId=data.id;
+        fillModal(data);
+        bookingModal.show();
+      })
+      .catch(function(){ });
+  }
+
+  document.getElementById('bookingKeepWaitingBtn').addEventListener('click', function(){
+    if(!activeId){bookingModal.hide();return;}
+    fetch('/appointments/'+activeId+'/keep-waiting/', {headers:{'X-Requested-With':'XMLHttpRequest'}})
+      .finally(function(){bookingModal.hide();activeId=null;});
+  });
+
+  document.getElementById('bookingAddScheduleBtn').addEventListener('click', function(){
+    if(!activeId){bookingModal.hide();return;}
+    window.location.href='/appointments/'+activeId+'/confirmed/';
+  });
+
+  var reorderMedicine=document.getElementById('reorderMedicine');
+  var reorderQty=document.getElementById('reorderQty');
+  var reorderSupplier=document.getElementById('reorderSupplier');
+  var reorderUnitPrice=document.getElementById('reorderUnitPrice');
+  var reorderFinalBill=document.getElementById('reorderFinalBill');
+
+  function updatePreview(){
+    if(!reorderMedicine||!reorderQty||!reorderMedicine.value||!reorderQty.value){return;}
+    fetch('{% url "reorder_supplies_preview" %}?medicine_id='+encodeURIComponent(reorderMedicine.value)+'&quantity='+encodeURIComponent(reorderQty.value))
+      .then(function(res){return res.json();})
+      .then(function(data){
+        if(!data.ok){return;}
+        reorderUnitPrice.textContent='₹'+data.price_per_unit;
+        reorderFinalBill.textContent='₹'+data.total_price;
+      })
+      .catch(function(){ });
+  }
+
+  if(reorderMedicine){
+    reorderMedicine.addEventListener('change', function(){
+      var selected=reorderMedicine.options[reorderMedicine.selectedIndex];
+      if(reorderSupplier && selected && selected.dataset.supplier){
+        reorderSupplier.value=selected.dataset.supplier;
+      }
+      updatePreview();
+    });
+  }
+  if(reorderQty){
+    reorderQty.addEventListener('input', updatePreview);
+  }
+
+  modalEl.addEventListener('hidden.bs.modal', function(){
+    activeId=null;
+  });
+
+  checkRequests();
+  setInterval(checkRequests, 12000);
+});
+</script>
+
+<div class="modal fade" id="bookingRequestModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:560px;">
+    <div class="modal-content border-0" style="border-radius:var(--card-radius);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));padding:28px 28px 20px;">
+        <h4 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:4px;">New Booking Request!</h4>
+        <p class="text-muted mb-0" style="font-size:.86rem;">A pet owner just booked an appointment</p>
+      </div>
+      <div style="padding:20px 28px 26px;">
+        <div class="card-soft p-3" style="background:#FAF8F5;">
+          <div class="d-flex justify-content-between py-1"><span style="font-size:.82rem;color:#7A6E78;">Pet name</span><span id="bookingRequestPet" class="fw-semibold" style="font-size:.86rem;"></span></div>
+          <div class="d-flex justify-content-between py-1"><span style="font-size:.82rem;color:#7A6E78;">Owner name</span><span id="bookingRequestOwner" class="fw-semibold" style="font-size:.86rem;"></span></div>
+          <div class="d-flex justify-content-between py-1"><span style="font-size:.82rem;color:#7A6E78;">Clinic name</span><span id="bookingRequestClinic" class="fw-semibold" style="font-size:.86rem;"></span></div>
+          <div class="d-flex justify-content-between py-1"><span style="font-size:.82rem;color:#7A6E78;">Date</span><span id="bookingRequestDate" class="fw-semibold" style="font-size:.86rem;"></span></div>
+          <div class="d-flex justify-content-between py-1"><span style="font-size:.82rem;color:#7A6E78;">Time</span><span id="bookingRequestTime" class="fw-semibold" style="font-size:.86rem;"></span></div>
+          <div class="py-1"><span style="font-size:.82rem;color:#7A6E78;">Reason for visit</span><div id="bookingRequestReason" class="fw-semibold" style="font-size:.86rem;color:var(--ink);"></div></div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button type="button" class="btn btn-pill btn-outline-rose flex-grow-1" id="bookingKeepWaitingBtn">Keep Waiting</button>
+          <button type="button" class="btn btn-pill btn-rose flex-grow-1" id="bookingAddScheduleBtn">Add to Schedule</button>
+        </div>
+      </div>
+      <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:16px;right:16px;"></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addMedicineModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:520px;">
+    <div class="modal-content border-0" style="border-radius:var(--card-radius);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));padding:24px 24px 18px;">
+        <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:0;">Add Medicine Stock</h5>
+      </div>
+      <form method="post" action="{% url 'add_medicine_stock' %}" style="padding:20px 24px 24px;">
+        {% csrf_token %}
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Medicine Name</label>{{ medicine_form.medicine_name }}</div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Category</label>{{ medicine_form.category }}</div>
+        <div class="row g-2 mb-2">
+          <div class="col-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Quantity</label>{{ medicine_form.quantity }}</div>
+          <div class="col-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Price per Unit</label>{{ medicine_form.price_per_unit }}</div>
+        </div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Supplier Shop</label>{{ medicine_form.supplier_shop }}</div>
+        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:.82rem;">Low Stock Threshold</label>{{ medicine_form.low_stock_threshold }}</div>
+        <button type="submit" class="btn btn-pill btn-rose w-100">Save Stock</button>
+      </form>
+      <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:14px;right:14px;"></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="reorderSuppliesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:520px;">
+    <div class="modal-content border-0" style="border-radius:var(--card-radius);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));padding:24px 24px 18px;">
+        <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:0;">Reorder Supplies</h5>
+      </div>
+      <form method="post" action="{% url 'reorder_supplies_confirm' %}" id="reorderForm" style="padding:20px 24px 24px;">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="form-label fw-semibold" style="font-size:.82rem;">Select Medicine</label>
+          <select name="medicine_id" id="reorderMedicine" class="form-select" required>
+            <option value="" selected disabled>Select medicine</option>
+            {% for item in medicine_items %}
+            <option value="{{ item.id }}" data-price="{{ item.price_per_unit }}" data-supplier="{{ item.supplier_shop }}">{{ item.medicine_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label fw-semibold" style="font-size:.82rem;">Supplier Shop</label>
+          <input type="text" name="supplier_shop" id="reorderSupplier" class="form-control" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label fw-semibold" style="font-size:.82rem;">Quantity</label>
+          <input type="number" name="quantity" id="reorderQty" min="1" class="form-control" required>
+        </div>
+        <div class="card-soft p-3 mb-3" style="background:#FAF8F5;">
+          <div class="d-flex justify-content-between"><span style="font-size:.82rem;color:#7A6E78;">Price per Unit</span><span id="reorderUnitPrice" class="fw-semibold">₹0</span></div>
+          <div class="d-flex justify-content-between"><span style="font-size:.82rem;color:#7A6E78;">Final Bill</span><span id="reorderFinalBill" class="fw-semibold" style="color:#E0527A;">₹0</span></div>
+        </div>
+        <button type="submit" class="btn btn-pill btn-rose w-100">Confirm Reorder</button>
+      </form>
+      <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:14px;right:14px;"></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addPatientRecordModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:620px;">
+    <div class="modal-content border-0" style="border-radius:var(--card-radius);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));padding:24px 24px 18px;">
+        <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:0;">Add Patient Record</h5>
+      </div>
+      <form method="post" action="{% url 'add_patient_record' %}" style="padding:20px 24px 24px;">
+        {% csrf_token %}
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Pet Name</label>{{ patient_record_form.pet }}</div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Visit Date</label>{{ patient_record_form.date }}</div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Diagnosis</label>{{ patient_record_form.diagnosis }}</div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Medications Prescribed</label>{{ patient_record_form.medications }}</div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Notes</label>{{ patient_record_form.description }}</div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Treatment</label>{{ patient_record_form.treatment }}</div>
+        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:.82rem;">Status</label>{{ patient_record_form.visit_status }}</div>
+        <button type="submit" class="btn btn-pill btn-rose w-100">Save Patient Record</button>
+      </form>
+      <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:14px;right:14px;"></button>
+    </div>
+  </div>
+</div>
+{% endblock %}

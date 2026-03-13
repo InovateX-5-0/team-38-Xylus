@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Appointments — PawNest{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div><div class="section-tag">📅 Appointments</div><h2 class="page-header">Vet Appointments</h2></div>
+    {% if user.role == 'owner' %}<a href="{% url 'book_appointment' %}" class="btn btn-pill btn-rose">+ Book Appointment</a>{% endif %}
+  </div>
+
+  {% if clinics %}
+  <div class="row g-3 mb-4">
+    {% for clinic in clinics %}
+    <div class="col-md-4">
+      <div class="card-soft p-3 d-flex align-items-center gap-3">
+        <div style="font-size:32px;">🏥</div>
+        <div class="flex-grow-1">
+          <div class="fw-semibold">{{ clinic.clinic_name }}</div>
+          <div style="font-size:.8rem;color:#7A6E78;">{{ clinic.city }} · {{ clinic.working_hours }}</div>
+          {% if clinic.is_emergency %}<span class="status-badge" style="background:#fee2e2;color:#991b1b;font-size:.72rem;margin-top:3px;display:inline-block;">🚨 Emergency</span>{% endif %}
+        </div>
+        <div style="font-size:.9rem;font-weight:600;color:#E0527A;">⭐{{ clinic.rating }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="card-soft p-4">
+    <h5 class="fw-bold mb-3">📋 My Appointments</h5>
+    {% if appointments %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr style="font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:#7A6E78;">
+          <th>Pet</th><th>Vet / Clinic</th><th>Type</th><th>Date & Time</th><th>Status</th>
+          {% if user.role == 'owner' %}<th>Action</th>{% endif %}
+        </tr></thead>
+        <tbody>
+        {% for appt in appointments %}
+        <tr>
+          <td><div class="fw-semibold">{{ appt.pet.name }}</div><div style="font-size:.8rem;color:#7A6E78;">{{ appt.pet.species }}</div></td>
+          <td>{% if appt.clinic %}{{ appt.clinic.clinic_name }}{% else %}Dr. {{ appt.vet.get_full_name|default:appt.vet.username }}{% endif %}</td>
+          <td><span class="status-badge" style="background:#E8F4FF;color:#1e40af;">{{ appt.get_appointment_type_display }}</span></td>
+          <td>{{ appt.date|date:"M d, Y" }} at {{ appt.time|time:"g:i A" }}</td>
+          <td><span class="status-badge badge-{{ appt.status }}">{{ appt.get_status_display }}</span></td>
+          {% if user.role == 'owner' %}<td>{% if appt.status == 'pending' %}<span style="font-size:.8rem;color:#7A6E78;">Awaiting vet</span>{% else %}—{% endif %}</td>{% endif %}
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <div style="font-size:48px;">📭</div>
+      <p>No appointments yet. <a href="{% url 'book_appointment' %}" style="color:#E0527A;">Book your first one!</a></p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

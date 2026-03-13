@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% block title %}Grooming Dashboard — PawNest{% endblock %}
+{% block extra_css %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+{% block content %}
+<div style="background:linear-gradient(135deg,#fff0f8,#f5eeff);min-height:calc(100vh - 64px);">
+  <div class="container-fluid py-4 px-4">
+
+    <!-- HEADER -->
+    <div class="card-soft p-4 mb-4" style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <h1 style="font-family:'Playfair Display',serif;font-weight:700;font-size:1.9rem;">{% if service %}{{ service.name }}{% else %}My Salon{% endif %} — Grooming Salon ✂️</h1>
+          <p class="text-muted mb-0">{% if service %}{{ service.city }} · {{ service.working_hours }} · {{ service.price_range }}{% else %}Set up your salon profile to get started.{% endif %}</p>
+          {% if service.is_verified %}<span style="display:inline-block;margin-top:8px;padding:4px 12px;border-radius:99px;background:#d1fae5;color:#065f46;font-weight:600;font-size:.82rem;">✔ Verified</span>{% endif %}
+        </div>
+        <div class="d-flex gap-2">
+          <a href="#" data-bs-toggle="modal" data-bs-target="#serviceProviderLoginModal" class="btn btn-pill" style="background:#fff;border:1.5px solid #9B5DE5;color:#9B5DE5;padding:10px 20px;border-radius:999px;font-weight:600;"><i class="fas fa-exchange-alt me-1"></i>Switch Account</a>
+          <a href="{% url 'manage_service' %}" class="btn btn-pill" style="background:#fff;border:1.5px solid #E0527A;color:#E0527A;padding:10px 20px;border-radius:999px;font-weight:600;">Edit Salon</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- WIDGETS -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">🐩</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#E0527A;">{{ sessions_today }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Sessions Today</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">💰</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#34c48a;">₹{{ today_revenue }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Today's Revenue</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">👥</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#9B5DE5;">{{ regular_clients }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Regular Clients</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">✂️</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#ff9500;">{{ currently_grooming }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Currently Grooming</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">⭐</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#ff9500;">{% if service %}{{ service.rating }}{% else %}—{% endif %}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Average Rating</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- MAIN CONTENT -->
+      <div class="col-lg-8">
+        <!-- TODAY'S SESSIONS -->
+        <div class="card-soft p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">🐩 Today's Sessions</h5>
+            <div class="d-flex gap-2 align-items-center">
+              {% if completed_today %}<span class="status-badge" style="background:#d1fae5;color:#065f46;font-size:.72rem;">{{ completed_today }} done</span>{% endif %}
+              {% if currently_grooming %}<span class="status-badge" style="background:#fef3c7;color:#92400e;font-size:.72rem;">{{ currently_grooming }} in progress</span>{% endif %}
+            </div>
+          </div>
+          {% if todays_sessions %}
+          {% for session in todays_sessions %}
+          <div class="d-flex align-items-center p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div class="me-3 d-flex align-items-center justify-content-center" style="width:44px;height:44px;background:linear-gradient(135deg,#FFE8F0,#F5EEFF);border-radius:12px;font-size:20px;">{% if session.pet.species|lower == 'cat' %}🐱{% elif session.pet.species|lower == 'dog' %}🐶{% else %}🐾{% endif %}</div>
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ session.pet.name }}</div>
+              <div style="font-size:.8rem;color:#7A6E78;">{{ session.owner.get_full_name|default:session.owner.username }} · {{ session.get_service_type_display }} · {{ session.time|time:"g:i A" }} · {{ session.duration_minutes }} mins</div>
+              {% if session.special_notes %}<div style="font-size:.78rem;color:#9B5DE5;margin-top:2px;">📝 {{ session.special_notes|truncatechars:70 }}</div>{% endif %}
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              {% if session.display_status == 'done' %}
+              <span class="status-badge" style="background:#d1fae5;color:#065f46;font-size:.72rem;">Done</span>
+              {% elif session.display_status == 'now' %}
+              <span class="status-badge" style="background:#fef3c7;color:#92400e;font-size:.72rem;">Now</span>
+              {% elif session.display_status == 'next' %}
+              <span class="status-badge" style="background:#dbeafe;color:#1e40af;font-size:.72rem;">Next</span>
+              {% else %}
+              <span class="status-badge" style="background:#F5EEFF;color:#9B5DE5;font-size:.72rem;">Scheduled</span>
+              {% endif %}
+              {% if session.booking and session.booking.status == 'confirmed' %}
+              <a href="{% url 'update_service_booking' session.booking.pk 'completed' %}" class="btn btn-sm rounded-pill px-3" style="background:#dbeafe;color:#1e40af;border:none;font-weight:600;font-size:.75rem;">Done</a>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <div style="font-size:40px;">🛁</div>
+            <p style="font-size:.88rem;">No grooming sessions scheduled for today.</p>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- BOOKING REQUESTS -->
+        <div class="card-soft p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">📩 Booking Requests</h5>
+            {% if pending_count %}<span class="status-badge" style="background:#FFF4E6;color:#B45309;font-size:.72rem;">{{ pending_count }} pending</span>{% endif %}
+          </div>
+          {% if pending_requests %}
+            {% for booking in pending_requests %}
+            <div class="p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <div class="fw-semibold">{{ booking.pet.name }} · {{ booking.get_service_type_display }}</div>
+                  <div style="font-size:.8rem;color:#7A6E78;">{{ booking.customer.get_full_name|default:booking.customer.username }} · {{ booking.date|date:"M d" }} {{ booking.time|time:"g:i A" }} · {{ booking.duration_minutes }} mins</div>
+                  {% if booking.notes %}<div style="font-size:.78rem;color:#9B5DE5;margin-top:2px;">📝 {{ booking.notes|truncatechars:70 }}</div>{% endif %}
+                </div>
+              </div>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <a href="{% url 'keep_waiting_grooming_booking' booking.pk %}" class="btn btn-sm rounded-pill px-3" style="background:#fff;border:1.5px solid #9B5DE5;color:#9B5DE5;font-weight:600;font-size:.75rem;">Keep Waiting</a>
+                <a href="{% url 'accept_grooming_booking' booking.pk %}" class="btn btn-sm rounded-pill px-3" style="background:#d1fae5;color:#065f46;border:none;font-weight:600;font-size:.75rem;">Accept Time</a>
+                <form method="post" action="{% url 'reschedule_grooming_booking' booking.pk %}" class="d-flex gap-2 align-items-center flex-wrap ms-auto">
+                  {% csrf_token %}
+                  <input type="date" name="new_date" class="form-control form-control-sm" style="max-width:140px;" required>
+                  <input type="time" name="new_time" class="form-control form-control-sm" style="max-width:120px;" required>
+                  <button type="submit" class="btn btn-sm rounded-pill px-3" style="background:#F5EEFF;color:#6d28d9;border:none;font-weight:600;font-size:.75rem;">Reschedule</button>
+                </form>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="text-center py-3 text-muted" style="font-size:.88rem;">No pending booking requests.</div>
+          {% endif %}
+        </div>
+
+        <!-- GROOMING SUPPLIES -->
+        <div class="card-soft p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">🧴 Grooming Supplies</h5>
+            <div class="d-flex align-items-center gap-2">
+              {% if low_stock_count %}<span class="status-badge" style="background:#fee2e2;color:#991b1b;font-size:.72rem;">{{ low_stock_count }} low</span>{% endif %}
+              <button type="button" class="btn btn-sm rounded-pill px-3" style="background:#fff;border:1.5px solid #9B5DE5;color:#9B5DE5;font-weight:600;" data-bs-toggle="modal" data-bs-target="#addSupplyModal">Add Supply Item</button>
+            </div>
+          </div>
+          {% if supplies %}
+          <div class="row g-3">
+            {% for item in supplies %}
+            <div class="col-md-4">
+              <div class="p-3 rounded-3 text-center" style="background:#FAF8F5;">
+                <div style="font-size:28px;margin-bottom:6px;">🧴</div>
+                <div class="fw-semibold" style="font-size:.88rem;">{{ item.product_name }}</div>
+                <div style="font-size:.78rem;color:#7A6E78;">{{ item.quantity }} {{ item.unit }}</div>
+                {% if item.quantity == 0 %}
+                <div style="font-size:.78rem;color:#991b1b;font-weight:600;">Out of Stock</div>
+                {% elif item.is_low_stock %}
+                <div style="font-size:.78rem;color:#92400e;font-weight:600;">Low Stock Warning</div>
+                {% else %}
+                <div style="font-size:.78rem;color:#065f46;font-weight:600;">In Stock</div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-3 text-muted" style="font-size:.88rem;">No supply items yet.</div>
+          {% endif %}
+          <div class="mt-3 d-flex justify-content-end">
+            <button type="button" class="btn btn-sm rounded-pill px-3" style="background:#fff;border:1.5px solid #E0527A;color:#E0527A;font-weight:600;" data-bs-toggle="modal" data-bs-target="#autoReorderModal">Auto-Reorder Low Stock</button>
+          </div>
+        </div>
+
+        <!-- SERVICE ANALYTICS -->
+        <div class="card-soft p-4 mt-4">
+          <h5 class="fw-bold mb-3">📈 Service Analytics</h5>
+          <div class="row g-3">
+            <div class="col-md-8">
+              <h6 class="fw-semibold mb-2" style="font-size:.9rem;">Monthly Sessions & Revenue</h6>
+              <canvas id="groomingMonthlyChart" height="170"></canvas>
+            </div>
+            <div class="col-md-4">
+              <h6 class="fw-semibold mb-2" style="font-size:.9rem;">Services Breakdown</h6>
+              <canvas id="groomingBreakdownChart" height="170"></canvas>
+              <div class="mt-2">
+                {% for item in service_breakdown_pairs %}
+                <div class="d-flex justify-content-between" style="font-size:.8rem;color:#7A6E78;">
+                  <span>{{ item.label }}</span><span style="font-weight:600;color:#1A1220;">{{ item.percent }}%</span>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="col-lg-4">
+        <!-- CLIENT CARE NOTES -->
+        <div class="card-soft p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">📝 Client Care Notes</h5>
+            <button type="button" class="btn btn-sm rounded-pill px-3" style="background:#fff;border:1.5px solid #9B5DE5;color:#9B5DE5;font-weight:600;" data-bs-toggle="modal" data-bs-target="#addCareNoteModal">Add Note</button>
+          </div>
+          {% for note in care_notes %}
+          <div class="p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <div style="font-size:16px;">{% if note.pet.species|lower == 'cat' %}🐱{% elif note.pet.species|lower == 'dog' %}🐶{% else %}🐾{% endif %}</div>
+              <div class="fw-semibold" style="font-size:.88rem;">{{ note.pet.name }}</div>
+              <span style="font-size:.72rem;color:#7A6E78;margin-left:auto;">{{ note.appointment_time|time:"g:i A" }}</span>
+            </div>
+            <p style="font-size:.82rem;color:#555;margin:0;">{{ note.note_text|truncatechars:100 }}</p>
+          </div>
+          {% empty %}
+          <div class="text-center py-3 text-muted" style="font-size:.85rem;">No care notes recorded yet.</div>
+          {% endfor %}
+        </div>
+
+        <!-- QUICK STATS -->
+        <div class="card-soft p-4">
+          <h5 class="fw-bold mb-3">📊 Overview</h5>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Total Bookings</div>
+            <div class="fw-bold" style="color:#E0527A;">{{ total_bookings }}</div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Pending</div>
+            <div class="fw-bold" style="color:#ff9500;">{{ pending_count }}</div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Confirmed</div>
+            <div class="fw-bold" style="color:#34c48a;">{{ confirmed_count }}</div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Unique Clients</div>
+            <div class="fw-bold" style="color:#9B5DE5;">{{ regular_clients }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal fade" id="addSupplyModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:560px;">
+    <div class="modal-content border-0" style="border-radius:var(--card-radius);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));padding:24px 24px 18px;">
+        <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:0;">Add Supply Item</h5>
+      </div>
+      <form method="post" action="{% url 'add_grooming_supply' %}" style="padding:20px 24px 24px;">
+        {% csrf_token %}
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Product Name</label>{{ supply_form.product_name }}</div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Category</label>{{ supply_form.category }}</div>
+        <div class="row g-2 mb-2">
+          <div class="col-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Quantity</label>{{ supply_form.quantity }}</div>
+          <div class="col-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Unit</label>{{ supply_form.unit }}</div>
+        </div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Supplier</label>{{ supply_form.supplier }}</div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Price per Unit</label>{{ supply_form.price_per_unit }}</div>
+        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:.82rem;">Low Stock Threshold</label>{{ supply_form.low_stock_threshold }}</div>
+        <button type="submit" class="btn btn-pill btn-rose w-100">Save Supply Item</button>
+      </form>
+      <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:14px;right:14px;"></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="autoReorderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:520px;">
+    <div class="modal-content border-0" style="border-radius:var(--card-radius);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));padding:24px 24px 18px;">
+        <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:0;">Auto-Reorder Low Stock</h5>
+      </div>
+      <form method="post" action="{% url 'reorder_grooming_supplies_confirm' %}" style="padding:20px 24px 24px;">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="form-label fw-semibold" style="font-size:.82rem;">Select Product</label>
+          <select name="supply_id" id="groomingSupplyId" class="form-select" required>
+            <option value="" selected disabled>Select low stock product</option>
+            {% for item in out_of_stock_items %}
+            <option value="{{ item.id }}" data-supplier="{{ item.supplier }}">{{ item.product_name }}</option>
+            {% endfor %}
+            {% for item in low_stock_items %}
+            <option value="{{ item.id }}" data-supplier="{{ item.supplier }}">{{ item.product_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Select Supplier</label><input type="text" name="supplier" id="groomingSupplier" class="form-control" required></div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Enter Reorder Quantity</label><input type="number" min="1" name="quantity" id="groomingReorderQty" class="form-control" required></div>
+        <div class="card-soft p-3 mb-3" style="background:#FAF8F5;">
+          <div class="d-flex justify-content-between"><span style="font-size:.82rem;color:#7A6E78;">Price per Unit</span><span id="groomingUnitPrice" class="fw-semibold">₹0</span></div>
+          <div class="d-flex justify-content-between"><span style="font-size:.82rem;color:#7A6E78;">Total Cost</span><span id="groomingTotalPrice" class="fw-semibold" style="color:#E0527A;">₹0</span></div>
+        </div>
+        <button type="submit" class="btn btn-pill btn-rose w-100">Confirm Reorder</button>
+      </form>
+      <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:14px;right:14px;"></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addCareNoteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:520px;">
+    <div class="modal-content border-0" style="border-radius:var(--card-radius);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));padding:24px 24px 18px;">
+        <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:0;">Add Client Care Note</h5>
+      </div>
+      <form method="post" action="{% url 'add_client_care_note' %}" style="padding:20px 24px 24px;">
+        {% csrf_token %}
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Pet Name</label>{{ care_note_form.pet }}</div>
+        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Appointment Time</label>{{ care_note_form.appointment_time }}</div>
+        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:.82rem;">Note Text</label>{{ care_note_form.note_text }}</div>
+        <button type="submit" class="btn btn-pill btn-rose w-100">Save Note</button>
+      </form>
+      <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:14px;right:14px;"></button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const monthlyLabels = JSON.parse('{{ monthly_labels|escapejs }}');
+const monthlySessions = JSON.parse('{{ monthly_sessions|escapejs }}');
+const monthlyRevenue = JSON.parse('{{ monthly_revenue|escapejs }}');
+const breakdownLabels = JSON.parse('{{ service_breakdown_labels|escapejs }}');
+const breakdownValues = JSON.parse('{{ service_breakdown_values|escapejs }}');
+
+if (document.getElementById('groomingMonthlyChart')) {
+  new Chart(document.getElementById('groomingMonthlyChart'), {
+    type: 'bar',
+    data: {
+      labels: monthlyLabels,
+      datasets: [
+        { label: 'Sessions', data: monthlySessions, backgroundColor: '#9B5DE5', borderRadius: 8 },
+        { label: 'Revenue', data: monthlyRevenue, backgroundColor: '#E0527A', borderRadius: 8 }
+      ]
+    },
+    options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' } }, x: { grid: { display: false } } } }
+  });
+}
+
+if (document.getElementById('groomingBreakdownChart')) {
+  new Chart(document.getElementById('groomingBreakdownChart'), {
+    type: 'doughnut',
+    data: {
+      labels: breakdownLabels,
+      datasets: [{ data: breakdownValues, backgroundColor: ['#E0527A','#9B5DE5','#34c48a','#FF9500','#7A6E78'], borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: { plugins: { legend: { display: false } }, cutout: '65%' }
+  });
+}
+
+window.addEventListener('DOMContentLoaded', function () {
+  const supplySelect = document.getElementById('groomingSupplyId');
+  const qtyInput = document.getElementById('groomingReorderQty');
+  const supplierInput = document.getElementById('groomingSupplier');
+  const unitPriceEl = document.getElementById('groomingUnitPrice');
+  const totalPriceEl = document.getElementById('groomingTotalPrice');
+
+  function refreshPreview() {
+    if (!supplySelect || !qtyInput || !supplySelect.value || !qtyInput.value) { return; }
+    fetch('{% url "reorder_grooming_supplies_preview" %}?supply_id=' + encodeURIComponent(supplySelect.value) + '&quantity=' + encodeURIComponent(qtyInput.value))
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        if (!data.ok) { return; }
+        unitPriceEl.textContent = '₹' + data.price_per_unit;
+        totalPriceEl.textContent = '₹' + data.total_price;
+      })
+      .catch(function(){});
+  }
+
+  if (supplySelect) {
+    supplySelect.addEventListener('change', function(){
+      const selected = supplySelect.options[supplySelect.selectedIndex];
+      if (supplierInput && selected && selected.dataset.supplier) {
+        supplierInput.value = selected.dataset.supplier;
+      }
+      refreshPreview();
+    });
+  }
+  if (qtyInput) {
+    qtyInput.addEventListener('input', refreshPreview);
+  }
+});
+</script>
+{% endblock %}

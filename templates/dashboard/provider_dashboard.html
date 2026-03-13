@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Provider Dashboard — PawNest{% endblock %}
+{% block content %}
+<div style="background:linear-gradient(135deg,#f0f4ff,#f5eeff);min-height:calc(100vh - 64px);">
+  <div class="container-fluid py-4 px-4">
+    <div class="card-soft p-4 mb-4" style="background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(155,93,229,.1));">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <h1 style="font-family:'Playfair Display',serif;font-weight:700;font-size:1.9rem;">{% if service %}{{ service.name }}{% else %}My Service{% endif %} 🛠️</h1>
+          <p class="text-muted mb-0">{% if service %}{{ service.get_provider_type_display }} · {{ service.city }} · {{ service.working_hours }}{% else %}Set up your service profile to get started.{% endif %}</p>
+          {% if service.is_verified %}<span style="display:inline-block;margin-top:8px;padding:4px 12px;border-radius:99px;background:#d1fae5;color:#065f46;font-weight:600;font-size:.82rem;">✔ Verified</span>{% endif %}
+        </div>
+        <div class="d-flex gap-2">
+          <a href="#" data-bs-toggle="modal" data-bs-target="#serviceProviderLoginModal" class="btn btn-pill" style="background:#fff;border:1.5px solid #9B5DE5;color:#9B5DE5;padding:10px 20px;border-radius:999px;font-weight:600;"><i class="fas fa-exchange-alt me-1"></i>Switch Account</a>
+          <a href="{% url 'manage_service' %}" class="btn btn-pill" style="background:#fff;border:1.5px solid #E0527A;color:#E0527A;padding:10px 20px;border-radius:999px;font-weight:600;">Edit Service</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3"><div class="card-soft p-4 text-center"><div style="font-size:2rem;font-weight:700;color:#E0527A;">{{ total_bookings }}</div><div class="text-muted" style="font-size:.85rem;">Total Bookings</div></div></div>
+      <div class="col-6 col-md-3"><div class="card-soft p-4 text-center"><div style="font-size:2rem;font-weight:700;color:#ff9500;">{{ pending_count }}</div><div class="text-muted" style="font-size:.85rem;">Pending</div></div></div>
+      <div class="col-6 col-md-3"><div class="card-soft p-4 text-center"><div style="font-size:2rem;font-weight:700;color:#34c48a;">{{ confirmed_count }}</div><div class="text-muted" style="font-size:.85rem;">Confirmed</div></div></div>
+      <div class="col-6 col-md-3"><div class="card-soft p-4 text-center"><div style="font-size:2rem;font-weight:700;color:#9B5DE5;">{% if service %}⭐{{ service.rating }}{% else %}—{% endif %}</div><div class="text-muted" style="font-size:.85rem;">Rating</div></div></div>
+    </div>
+
+    <!-- Bookings -->
+    <div class="card-soft p-4">
+      <h5 class="fw-bold mb-3">📋 Recent Bookings</h5>
+      {% if bookings %}
+      <div class="table-responsive">
+        <table style="width:100%;border-collapse:separate;border-spacing:0 8px;">
+          {% for booking in bookings %}
+          <tr>
+            <td class="p-3 rounded-start-3" style="background:#FAF8F5;">
+              <div class="fw-semibold">{{ booking.customer.get_full_name|default:booking.customer.username }}</div>
+              <div style="font-size:.8rem;color:#7A6E78;">🐾 {{ booking.pet.name }} ({{ booking.pet.species }})</div>
+            </td>
+            <td class="p-3" style="background:#FAF8F5;">
+              <div style="font-size:.88rem;">📅 {{ booking.date|date:"M d, Y" }}</div>
+              <div style="font-size:.8rem;color:#7A6E78;">🕐 {{ booking.time|time:"g:i A" }}</div>
+            </td>
+            <td class="p-3" style="background:#FAF8F5;">
+              <span class="status-badge badge-{{ booking.status }}">{{ booking.get_status_display }}</span>
+            </td>
+            <td class="p-3 rounded-end-3" style="background:#FAF8F5;">
+              {% if booking.status == 'pending' %}
+              <div class="d-flex gap-1">
+                <a href="{% url 'update_service_booking' booking.pk 'confirmed' %}" class="btn btn-sm rounded-pill px-3" style="background:#d1fae5;color:#065f46;border:none;font-weight:600;font-size:.78rem;">Confirm</a>
+                <a href="{% url 'update_service_booking' booking.pk 'cancelled' %}" class="btn btn-sm rounded-pill px-3" style="background:#fee2e2;color:#991b1b;border:none;font-weight:600;font-size:.78rem;">Cancel</a>
+              </div>
+              {% elif booking.status == 'confirmed' %}
+              <a href="{% url 'update_service_booking' booking.pk 'completed' %}" class="btn btn-sm rounded-pill px-3" style="background:#dbeafe;color:#1e40af;border:none;font-weight:600;font-size:.78rem;">Complete</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <div style="font-size:48px;">📋</div>
+        <p>No bookings yet. Share your profile to start receiving bookings! 🐾</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

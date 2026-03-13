@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline — FluffBud</title>
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:'DM Sans',sans-serif;
+      background:linear-gradient(135deg,#f0ebf8 0%,#fff5f8 100%);
+      color:#1A1220;
+      padding:24px;
+    }
+    .offline-card{
+      max-width:520px;
+      width:100%;
+      background:linear-gradient(135deg,#FFF5F7,#F4ECFF);
+      border-radius:18px;
+      box-shadow:0 8px 25px rgba(0,0,0,0.06);
+      padding:28px;
+      text-align:center;
+      border:1px solid rgba(155,93,229,0.12);
+    }
+    .title{
+      margin:8px 0;
+      font-size:1.7rem;
+      font-weight:700;
+    }
+    .text{
+      margin:0;
+      color:#7A6E78;
+      font-size:.95rem;
+      line-height:1.6;
+    }
+    .home-link{
+      display:inline-block;
+      margin-top:18px;
+      text-decoration:none;
+      background:#E0527A;
+      color:#fff;
+      border-radius:999px;
+      padding:10px 20px;
+      font-weight:600;
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-card">
+    <div style="font-size:40px;">📴🐾</div>
+    <h2 class="title">You are offline 🐾</h2>
+    <p class="text">Please check your internet connection.</p>
+    <a class="home-link" href="/">Back to Home</a>
+  </div>
+</body>
+</html>

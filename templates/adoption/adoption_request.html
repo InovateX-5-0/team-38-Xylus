@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Adopt {{ listing.name }} — PawNest{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:600px;">
+  <div class="section-tag">🏠 Adoption Request</div>
+  <h2 class="page-header mb-4">Adopt {{ listing.name }}</h2>
+  {% if existing %}
+  <div class="alert alert-warning">You've already submitted a request for {{ listing.name }}. Status: <strong>{{ existing.get_status_display }}</strong></div>
+  {% else %}
+  <div class="card-soft p-4">
+    <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded-3" style="background:#FAF8F5;">
+      <div style="font-size:40px;">{% if listing.species|lower == 'cat' %}🐱{% elif listing.species|lower == 'dog' %}🐶{% else %}🐾{% endif %}</div>
+      <div><div class="fw-bold" style="font-size:1.1rem;">{{ listing.name }}</div><div class="text-muted" style="font-size:.85rem;">{{ listing.species }} · {{ listing.age_display }} · {{ listing.location }}</div></div>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3"><label class="form-label fw-semibold">Applicant Name *</label>{{ form.applicant_name }}</div>
+      <div class="mb-3"><label class="form-label fw-semibold">Contact Info *</label>{{ form.contact_info }}</div>
+      <div class="mb-3"><label class="form-label fw-semibold">Living Situation *</label>{{ form.living_situation }}</div>
+      <div class="mb-3"><label class="form-label fw-semibold">Experience with pets</label>{{ form.pet_experience }}</div>
+      <div class="mb-3"><label class="form-label fw-semibold">Notes</label>{{ form.notes }}</div>
+      <button type="submit" class="btn btn-pill btn-rose w-100">Submit Adoption Request 🐾</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

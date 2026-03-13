@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — PawNest{% endblock %}
+{% block content %}
+<div style="background:linear-gradient(135deg,#f0ebf8 0%,#fff5f8 100%);min-height:calc(100vh - 64px);">
+  <div class="container-fluid py-4 px-4">
+
+    <!-- WELCOME CARD -->
+    <div class="card-soft p-4 mb-4" style="background:linear-gradient(135deg,rgba(224,82,122,.08),rgba(155,93,229,.08));position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-20px;right:-20px;font-size:120px;opacity:.05;">🐾</div>
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
+        <div>
+          <h1 style="font-family:'Playfair Display',serif;font-weight:700;font-size:2rem;">Hello, <span style="color:#E0527A;">{{ user.first_name|default:user.username }}</span> 🌸</h1>
+          <p class="text-muted mb-0">Everything your furry family needs, all in one cosy place.</p>
+          {% if service_provider.is_verified %}<span style="display:inline-block;margin-top:8px;padding:4px 12px;border-radius:99px;background:#d1fae5;color:#065f46;font-weight:600;font-size:.82rem;">✔ Verified</span>{% endif %}
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+          {% for pet in pets|slice:":3" %}
+          <div style="width:48px;height:48px;background:linear-gradient(135deg,#FFE8F0,#F5EEFF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.1);">
+            {% if pet.species|lower == 'cat' %}🐱{% elif pet.species|lower == 'dog' %}🐶{% elif pet.species|lower == 'rabbit' %}🐰{% else %}🐾{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card-soft p-3 h-100" style="background:linear-gradient(135deg,#fff5f0,#fff);">
+          <div class="d-flex align-items-center gap-3">
+            <div style="font-size:28px;">💉</div>
+            <div><div style="font-size:1.8rem;font-weight:700;line-height:1;">{{ reminders|length }}</div><div style="font-size:.82rem;color:#7A6E78;">Vaccines Due</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card-soft p-3 h-100" style="background:linear-gradient(135deg,#f0fff8,#fff);">
+          <div class="d-flex align-items-center gap-3">
+            <div style="font-size:28px;">🩺</div>
+            <div><div style="font-size:1.8rem;font-weight:700;line-height:1;">{{ appointments|length }}</div><div style="font-size:.82rem;color:#7A6E78;">Upcoming Appt</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card-soft p-3 h-100" style="background:linear-gradient(135deg,#f5eeff,#fff);">
+          <div class="d-flex align-items-center gap-3">
+            <div style="font-size:28px;">🐾</div>
+            <div><div style="font-size:1.8rem;font-weight:700;line-height:1;">{{ pets|length }}</div><div style="font-size:.82rem;color:#7A6E78;">My Pets</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card-soft p-3 h-100" style="background:linear-gradient(135deg,#fff8f0,#fff);">
+          <div class="d-flex align-items-center gap-3">
+            <div style="font-size:28px;">💬</div>
+            <div><div style="font-size:1.8rem;font-weight:700;line-height:1;">{{ posts_count }}</div><div style="font-size:.82rem;color:#7A6E78;">Community Posts</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- MY PETS -->
+      <div class="col-lg-6">
+        <div class="card-soft p-4 h-100">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-bold mb-0">🐾 My Pets</h5>
+            <a href="{% url 'add_pet' %}" class="btn btn-sm rounded-pill px-3" style="background:linear-gradient(135deg,#E0527A,#C73D62);color:#fff;font-weight:600;border:none;">+ Add Pet</a>
+          </div>
+          {% for pet in pets %}
+          <a href="{% url 'pet_detail' pet.pk %}" class="d-flex align-items-center p-3 rounded-3 mb-2 text-decoration-none" style="background:#FAF8F5;transition:all .2s;" onmouseover="this.style.background='#f0ebf8'" onmouseout="this.style.background='#FAF8F5'">
+            <div class="me-3" style="width:42px;height:42px;background:linear-gradient(135deg,#FFE8F0,#F5EEFF);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;">
+              {% if pet.species|lower == 'cat' %}🐱{% elif pet.species|lower == 'dog' %}🐶{% elif pet.species|lower == 'rabbit' %}🐰{% else %}🐾{% endif %}
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-semibold" style="color:#1A1220;">{{ pet.name }}</div>
+              <div style="font-size:.82rem;color:#7A6E78;">{{ pet.breed|default:pet.species }} · {{ pet.age_display }} · {{ pet.get_gender_display }}</div>
+            </div>
+            <span class="status-badge badge-{{ pet.status }}">{{ pet.get_status_display }}</span>
+          </a>
+          {% empty %}
+          <div class="text-center py-4 text-muted">
+            <div style="font-size:48px;margin-bottom:8px;">🐾</div>
+            <p>No pets yet. <a href="{% url 'add_pet' %}" style="color:#E0527A;">Add your first pet!</a></p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- UPCOMING -->
+      <div class="col-lg-6">
+        <div class="card-soft p-4 h-100">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-bold mb-0">📅 Upcoming</h5>
+            <a href="{% url 'appointments' %}" style="color:#E0527A;font-size:.88rem;font-weight:600;text-decoration:none;">View All</a>
+          </div>
+          {% for appt in upcoming_appointments %}
+          <div class="d-flex align-items-start p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div class="me-3 text-center" style="min-width:42px;">
+              <div style="font-size:1.1rem;font-weight:700;color:#E0527A;line-height:1;">{{ appt.date|date:"d" }}</div>
+              <div style="font-size:.72rem;color:#7A6E78;text-transform:uppercase;">{{ appt.date|date:"M" }}</div>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-semibold" style="font-size:.9rem;color:#1A1220;">{{ appt.get_appointment_type_display }} — {{ appt.pet.name }}</div>
+              <div style="font-size:.8rem;color:#7A6E78;">{% if appt.clinic %}{{ appt.clinic.clinic_name }}{% endif %} · {{ appt.time|time:"g:i A" }}</div>
+            </div>
+            <span class="status-badge badge-{{ appt.status }}" style="font-size:.72rem;">{{ appt.get_status_display }}</span>
+          </div>
+          {% empty %}
+          <div class="text-center py-4 text-muted">
+            <div style="font-size:48px;margin-bottom:8px;">📅</div>
+            <p>No upcoming appointments. <a href="{% url 'book_appointment' %}" style="color:#E0527A;">Book one!</a></p>
+          </div>
+          {% endfor %}
+
+          {% if reminders %}
+          <h6 class="fw-semibold mt-3 mb-2" style="font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:#7A6E78;">🔔 Reminders</h6>
+          {% for r in reminders %}
+          <div class="d-flex align-items-center p-3 rounded-3 mb-2" style="background:{% if r.is_overdue %}#FEF2F2{% else %}#FAF8F5{% endif %};">
+            <div class="me-3" style="font-size:18px;">{% if r.reminder_type == 'vaccination' %}💉{% elif r.reminder_type == 'deworming' %}🪱{% elif r.reminder_type == 'checkup' %}🩺{% else %}🔔{% endif %}</div>
+            <div class="flex-grow-1">
+              <div style="font-size:.88rem;font-weight:600;">{{ r.title }}</div>
+              <div style="font-size:.78rem;color:#7A6E78;">{{ r.pet.name }} · Due {{ r.due_date|date:"M d" }}</div>
+            </div>
+            {% if r.is_overdue %}<span class="status-badge" style="background:#fee2e2;color:#991b1b;font-size:.72rem;">Overdue</span>{% endif %}
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-3">
+      <div class="col-md-6">
+        <div class="card-soft p-4 h-100" style="background:linear-gradient(135deg,#FFF5F7,#F4ECFF);border-radius:18px;box-shadow:0 8px 25px rgba(0,0,0,0.06);">
+          <div style="font-size:34px;">💬🐾</div>
+          <h5 class="fw-bold mt-2">Join Community Chat</h5>
+          <p style="color:#7A6E78;font-size:.9rem;">
+            Connect with other pet owners, share pet photos, ask questions and interact with the community.
+          </p>
+          <a href="{% url 'community' %}" class="btn btn-pill" style="background:#E0527A;color:white;border-radius:999px;padding:8px 18px;font-weight:600;" onmouseover="this.style.background='#d9436c'" onmouseout="this.style.background='#E0527A'">
+            Join Chat
+          </a>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card-soft p-4 h-100" style="background:linear-gradient(135deg,#FFF5F7,#F4ECFF);border-radius:18px;box-shadow:0 8px 25px rgba(0,0,0,0.06);">
+          <div style="font-size:34px;">🔎🐾</div>
+          <h5 class="fw-bold mt-2">Lost &amp; Found Pets</h5>
+          <p style="color:#7A6E78;font-size:.9rem;">
+            Help reunite lost pets with their families or report pets you have found.
+          </p>
+          <a href="{% url 'lost_found' %}" class="btn btn-pill" style="background:#E0527A;color:white;border-radius:999px;padding:8px 18px;font-weight:600;" onmouseover="this.style.background='#d9436c'" onmouseout="this.style.background='#E0527A'">
+            View All
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

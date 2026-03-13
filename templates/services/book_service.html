@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Book Service — PawNest{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:600px;">
+  <div class="section-tag">🛠️ Book Service</div>
+  <h2 class="page-header mb-4">Book {{ service.name }}</h2>
+  <div class="card-soft p-4 mb-3">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      {% if service.photo %}<img src="{{ service.photo.url }}" class="rounded-3" style="width:60px;height:60px;object-fit:cover;"/>
+      {% else %}<div style="width:60px;height:60px;background:linear-gradient(135deg,#E8F4FF,#F5EEFF);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;">🛠️</div>{% endif %}
+      <div>
+        <h6 class="fw-bold mb-0">{{ service.name }}</h6>
+        <span class="status-badge" style="background:#E8F4FF;color:#1e40af;font-size:.72rem;">{{ service.get_provider_type_display }}</span>
+        <p style="font-size:.82rem;color:#7A6E78;margin:4px 0 0;">📍 {{ service.city }} · 🕐 {{ service.working_hours }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="card-soft p-4">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3"><label class="form-label fw-semibold">Your Pet *</label>{{ form.pet }}</div>
+      {% if form.service_type %}
+      <div class="mb-3"><label class="form-label fw-semibold">Service Type *</label>{{ form.service_type }}</div>
+      {% endif %}
+      <div class="row g-3 mb-3">
+        <div class="col-6"><label class="form-label fw-semibold">Date *</label>{{ form.date }}</div>
+        <div class="col-6"><label class="form-label fw-semibold">Time *</label>{{ form.time }}</div>
+      </div>
+      {% if form.duration_minutes %}
+      <div class="mb-3"><label class="form-label fw-semibold">Duration (minutes) *</label>{{ form.duration_minutes }}</div>
+      {% endif %}
+      <div class="mb-3"><label class="form-label fw-semibold">Notes / Special Instructions</label>{{ form.notes }}</div>
+      <div class="d-flex gap-3 mt-3">
+        <button type="submit" class="btn btn-pill btn-rose flex-grow-1">Book Service 🐾</button>
+        <a href="{% url 'services' %}" class="btn btn-pill btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

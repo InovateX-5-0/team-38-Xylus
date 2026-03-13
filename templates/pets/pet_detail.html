@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}{{ pet.name }} — PawNest{% endblock %}
+{% block extra_css %}
+<style>
+.reminder-bg-overdue{background:#FEF2F2;}
+.reminder-bg-normal{background:#FAF8F5;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <!-- PET CARD -->
+    <div class="col-md-4">
+      <div class="card-soft p-4 text-center">
+        {% if pet.photo %}<img src="{{ pet.photo.url }}" class="rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;"/>
+        {% else %}<div style="width:120px;height:120px;background:linear-gradient(135deg,#FFE8F0,#F5EEFF);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:56px;margin:0 auto 16px;">{% if pet.species|lower == 'cat' %}🐱{% elif pet.species|lower == 'dog' %}🐶{% else %}🐾{% endif %}</div>{% endif %}
+        <h3 style="font-family:'Playfair Display',serif;font-weight:700;">{{ pet.name }}</h3>
+        <p class="text-muted">{{ pet.breed|default:pet.species }}</p>
+        <span class="status-badge badge-{{ pet.status }} mb-3 d-inline-block">{{ pet.get_status_display }}</span>
+        <div class="row g-2 text-start mt-2">
+          <div class="col-6"><div style="background:#FAF8F5;border-radius:10px;padding:10px;"><div style="font-size:.72rem;color:#7A6E78;text-transform:uppercase;font-weight:600;">Age</div><div class="fw-semibold">{{ pet.age_display }}</div></div></div>
+          <div class="col-6"><div style="background:#FAF8F5;border-radius:10px;padding:10px;"><div style="font-size:.72rem;color:#7A6E78;text-transform:uppercase;font-weight:600;">Gender</div><div class="fw-semibold">{{ pet.get_gender_display }}</div></div></div>
+          {% if pet.weight %}<div class="col-6"><div style="background:#FAF8F5;border-radius:10px;padding:10px;"><div style="font-size:.72rem;color:#7A6E78;text-transform:uppercase;font-weight:600;">Weight</div><div class="fw-semibold">{{ pet.weight }} kg</div></div></div>{% endif %}
+          {% if pet.color %}<div class="col-6"><div style="background:#FAF8F5;border-radius:10px;padding:10px;"><div style="font-size:.72rem;color:#7A6E78;text-transform:uppercase;font-weight:600;">Color</div><div class="fw-semibold">{{ pet.color }}</div></div></div>{% endif %}
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <a href="{% url 'edit_pet' pet.pk %}" class="btn btn-pill btn-outline-rose flex-grow-1" style="border:1.5px solid #E0527A;color:#E0527A;padding:8px 16px;border-radius:999px;font-weight:600;text-decoration:none;text-align:center;">Edit</a>
+          <form method="post" action="{% url 'delete_pet' pet.pk %}" class="flex-grow-1">
+            {% csrf_token %}<button type="submit" class="btn btn-pill w-100" style="background:#fee2e2;color:#991b1b;border:none;font-weight:600;" onclick="return confirm('Delete {{ pet.name }}?')">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECORDS & REMINDERS -->
+    <div class="col-md-8">
+      <!-- Health Records -->
+      <div class="card-soft p-4 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0">📋 Health Records</h5>
+          <button class="btn btn-sm rounded-pill px-3" style="background:#E8F4FF;color:#1e40af;border:none;font-weight:600;" data-bs-toggle="collapse" data-bs-target="#addRecord">+ Add</button>
+        </div>
+        <div class="collapse mb-3" id="addRecord">
+          <div class="p-3 rounded-3" style="background:#FAF8F5;">
+            <form method="post" enctype="multipart/form-data">{% csrf_token %}
+              <div class="row g-2">
+                <div class="col-md-6">{{ record_form.title }}</div>
+                <div class="col-md-6">{{ record_form.date }}</div>
+                <div class="col-12">{{ record_form.description }}</div>
+                <div class="col-md-6">{{ record_form.diagnosis }}</div>
+                <div class="col-md-6">{{ record_form.medications }}</div>
+              </div>
+              <button type="submit" name="add_record" class="btn btn-pill btn-rose mt-2">Save Record</button>
+            </form>
+          </div>
+        </div>
+        {% for rec in health_records %}
+        <div class="p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+          <div class="d-flex justify-content-between"><span class="fw-semibold">{{ rec.title }}</span><span style="font-size:.8rem;color:#7A6E78;">{{ rec.date|date:"M d, Y" }}</span></div>
+          <p style="font-size:.85rem;color:#555;margin:4px 0 0;">{{ rec.description|truncatechars:100 }}</p>
+          {% if rec.diagnosis %}<span class="status-badge" style="background:#dbeafe;color:#1e40af;font-size:.72rem;margin-top:4px;display:inline-block;">{{ rec.diagnosis }}</span>{% endif %}
+        </div>
+        {% empty %}<p class="text-muted text-center py-2">No health records yet.</p>{% endfor %}
+      </div>
+
+      <!-- Reminders -->
+      <div class="card-soft p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0">🔔 Reminders</h5>
+          <button class="btn btn-sm rounded-pill px-3" style="background:#FFF5E8;color:#92400e;border:none;font-weight:600;" data-bs-toggle="collapse" data-bs-target="#addReminder">+ Add</button>
+        </div>
+        <div class="collapse mb-3" id="addReminder">
+          <div class="p-3 rounded-3" style="background:#FAF8F5;">
+            <form method="post">{% csrf_token %}
+              <div class="row g-2">
+                <div class="col-md-6">{{ reminder_form.reminder_type }}</div>
+                <div class="col-md-6">{{ reminder_form.due_date }}</div>
+                <div class="col-12">{{ reminder_form.title }}</div>
+              </div>
+              <button type="submit" name="add_reminder" class="btn btn-pill btn-rose mt-2">Set Reminder</button>
+            </form>
+          </div>
+        </div>
+        {% for rem in reminders %}
+        <div class="d-flex align-items-center p-3 rounded-3 mb-2 {% if rem.is_overdue %}reminder-bg-overdue{% else %}reminder-bg-normal{% endif %}">
+          <div class="me-3" style="font-size:20px;">{% if rem.reminder_type == 'vaccination' %}💉{% elif rem.reminder_type == 'deworming' %}🪱{% elif rem.reminder_type == 'checkup' %}🩺{% else %}🔔{% endif %}</div>
+          <div class="flex-grow-1">
+            <div class="fw-semibold" style="font-size:.9rem;">{{ rem.title }}</div>
+            <div style="font-size:.78rem;color:#7A6E78;">Due {{ rem.due_date|date:"M d, Y" }}</div>
+          </div>
+          {% if rem.is_overdue %}<span class="status-badge" style="background:#fee2e2;color:#991b1b;font-size:.72rem;">Overdue!</span>{% endif %}
+        </div>
+        {% empty %}<p class="text-muted text-center py-2">No reminders set.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

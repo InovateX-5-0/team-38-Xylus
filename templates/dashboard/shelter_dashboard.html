@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% block title %}Shelter Dashboard — PawNest{% endblock %}
+{% block content %}
+<div style="background:linear-gradient(135deg,#f0fff8,#f5eeff);min-height:calc(100vh - 64px);">
+  <div class="container-fluid py-4 px-4">
+
+    <!-- HEADER -->
+    <div class="card-soft p-4 mb-4" style="background:linear-gradient(135deg,rgba(52,196,138,.1),rgba(155,93,229,.1));">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <h1 style="font-family:'Playfair Display',serif;font-weight:700;font-size:1.9rem;">{{ user.get_full_name|default:user.username }} — Animal Shelter 🏠</h1>
+          <p class="text-muted mb-0">Manage your animals, adoptions, and intakes.</p>
+          {% if service_provider.is_verified %}<span style="display:inline-block;margin-top:8px;padding:4px 12px;border-radius:99px;background:#d1fae5;color:#065f46;font-weight:600;font-size:.82rem;">✔ Verified</span>{% endif %}
+        </div>
+        <div class="d-flex gap-2">
+          <a href="#" data-bs-toggle="modal" data-bs-target="#serviceProviderLoginModal" class="btn btn-pill" style="background:#fff;border:1.5px solid #9B5DE5;color:#9B5DE5;padding:10px 20px;border-radius:999px;font-weight:600;"><i class="fas fa-exchange-alt me-1"></i>Switch Account</a>
+          <button type="button" data-bs-toggle="modal" data-bs-target="#logIntakeModal" class="btn btn-pill btn-rose">+ Log New Intake</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WIDGETS -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">🐾</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#E0527A;">{{ animals_in_care }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Animals in Care</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">🎉</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#34c48a;">{{ adopted_this_month }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Adopted This Month</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">📋</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#ff9500;">{{ pending_apps_count }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Pending Applications</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">📥</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#9B5DE5;">{{ new_intakes_today }}</div>
+          <div style="font-size:.82rem;color:#7A6E78;">New Intakes Today</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg">
+        <div class="card-soft p-3 text-center">
+          <div style="font-size:28px;margin-bottom:4px;">💉</div>
+          <div style="font-size:1.8rem;font-weight:700;color:#E0527A;">0</div>
+          <div style="font-size:.82rem;color:#7A6E78;">Vaccines Due</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- MAIN CONTENT -->
+      <div class="col-lg-8">
+        <!-- ANIMALS IN CARE -->
+        <div class="card-soft p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">🐾 Animals in Care</h5>
+            <span class="status-badge" style="background:#E8F4FF;color:#1e40af;font-size:.78rem;">{{ animals_in_care }} animal{{ animals_in_care|pluralize }}</span>
+          </div>
+          {% if available_listings %}
+          <div class="row g-3">
+            {% for listing in available_listings %}
+            <div class="col-md-6">
+              <div class="d-flex align-items-center p-3 rounded-3" style="background:#FAF8F5;">
+                {% if listing.photo %}
+                <img src="{{ listing.photo.url }}" class="rounded-3 me-3" style="width:50px;height:50px;object-fit:cover;"/>
+                {% else %}
+                <div class="me-3" style="width:50px;height:50px;background:linear-gradient(135deg,#FFE8F0,#F5EEFF);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;">{% if listing.species|lower == 'cat' %}🐱{% elif listing.species|lower == 'dog' %}🐶{% else %}🐾{% endif %}</div>
+                {% endif %}
+                <div class="flex-grow-1">
+                  <div class="fw-semibold">{{ listing.name }}</div>
+                  <div style="font-size:.78rem;color:#7A6E78;">{{ listing.get_species_display }} · {{ listing.age_display }} · {{ listing.get_gender_display }}</div>
+                  <div style="font-size:.74rem;color:#7A6E78;">{{ listing.get_health_status_display }} · {{ listing.get_vaccination_status_display }}</div>
+                </div>
+                <span class="status-badge badge-{{ listing.adoption_status }}" style="font-size:.72rem;">{{ listing.get_adoption_status_display }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <div style="font-size:40px;">🏠</div>
+            <p style="font-size:.88rem;">No animals currently in care. <a href="{% url 'add_adoption_listing' %}" style="color:#E0527A;">Add a listing</a></p>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- ADOPTION APPLICATIONS -->
+        <div class="card-soft p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">📋 Adoption Applications</h5>
+            <div class="d-flex align-items-center gap-2">
+              {% if pending_apps_count %}<span class="status-badge" style="background:#fee2e2;color:#991b1b;font-size:.72rem;">{{ pending_apps_count }} pending</span>{% endif %}
+              <a href="{% url 'view_all_applications' %}" style="font-size:.82rem;font-weight:600;color:#E0527A;text-decoration:none;">View All Applications</a>
+            </div>
+          </div>
+          {% if pending_requests %}
+          {% for req in pending_requests %}
+          <div class="p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div class="d-flex align-items-center gap-3">
+                <div style="width:40px;height:40px;background:linear-gradient(135deg,#FFE8F0,#F5EEFF);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+                <div>
+                  <div class="fw-semibold">{{ req.applicant_name }}</div>
+                  <div style="font-size:.8rem;color:#7A6E78;">{{ req.contact_info }} · wants to adopt <span style="color:#E0527A;font-weight:600;">{{ req.animal.name }}</span></div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <a href="{% url 'view_all_applications' %}?status=pending" class="btn btn-sm rounded-pill px-3" style="background:#dbeafe;color:#1e40af;font-weight:600;border:none;font-size:.78rem;">Review</a>
+                <a href="{% url 'manage_adoption_request' req.pk 'approve' %}" class="btn btn-sm rounded-pill px-3" style="background:#d1fae5;color:#065f46;font-weight:600;border:none;font-size:.78rem;">Approve</a>
+                <a href="{% url 'manage_adoption_request' req.pk 'deny' %}" class="btn btn-sm rounded-pill px-3" style="background:#fee2e2;color:#991b1b;font-weight:600;border:none;font-size:.78rem;">Deny</a>
+              </div>
+            </div>
+            <p style="font-size:.82rem;color:#555;margin:0 0 0 52px;">{{ req.notes|truncatechars:120 }}</p>
+            {% if req.living_situation %}<div style="font-size:.78rem;color:#7A6E78;margin:4px 0 0 52px;">🏡 {{ req.living_situation }}</div>{% endif %}
+            {% if req.pet_experience %}<div style="font-size:.78rem;color:#7A6E78;margin:2px 0 0 52px;">🐾 {{ req.pet_experience|truncatechars:70 }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <div style="font-size:40px;">📭</div>
+            <p style="font-size:.88rem;">No pending applications.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="col-lg-4">
+        <!-- RECENT INTAKES -->
+        <div class="card-soft p-4 mb-4">
+          <h5 class="fw-bold mb-3">📥 Recent Intakes</h5>
+          {% for listing in recent_intakes %}
+          <div class="d-flex align-items-center p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div class="me-3" style="font-size:22px;">{% if listing.animal.species|lower == 'cat' %}🐱{% elif listing.animal.species|lower == 'dog' %}🐶{% elif listing.animal.species|lower == 'rabbit' %}🐰{% else %}🐾{% endif %}</div>
+            <div class="flex-grow-1">
+              <div class="fw-semibold" style="font-size:.88rem;">{{ listing.animal.name }}</div>
+              <div style="font-size:.78rem;color:#7A6E78;">{{ listing.animal.get_species_display }} · {{ listing.animal.get_gender_display }}</div>
+            </div>
+            <div style="text-align:right;">
+              <span class="status-badge badge-{{ listing.animal.adoption_status }}" style="font-size:.7rem;">{{ listing.animal.get_adoption_status_display }}</span>
+              <div style="font-size:.72rem;color:#7A6E78;margin-top:2px;">{{ listing.intake_date|date:"M d" }}</div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-3 text-muted" style="font-size:.85rem;">No intakes recorded yet.</div>
+          {% endfor %}
+        </div>
+
+        <!-- QUICK STATS -->
+        <div class="card-soft p-4">
+          <h5 class="fw-bold mb-3">📊 Overview</h5>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Total Listings</div>
+            <div class="fw-bold" style="color:#E0527A;">{{ total_listings }}</div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Available</div>
+            <div class="fw-bold" style="color:#34c48a;">{{ available_count }}</div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-2" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Adopted</div>
+            <div class="fw-bold" style="color:#9B5DE5;">{{ adopted_count }}</div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Pending Adoption</div>
+            <div class="fw-bold" style="color:#ff9500;">{{ pending_apps_count }}</div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mt-2" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Dogs / Cats / Rabbits / Others</div>
+            <div class="fw-bold" style="color:#9B5DE5;">{{ species_counts.dogs }}/{{ species_counts.cats }}/{{ species_counts.rabbits }}/{{ species_counts.others }}</div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mt-2" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Capacity</div>
+            <div class="fw-bold" style="color:#34c48a;">{{ capacity_text }}</div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mt-2" style="background:#FAF8F5;">
+            <div style="font-size:.88rem;">Avg Days to Adoption</div>
+            <div class="fw-bold" style="color:#E0527A;">D{{ avg_days.dogs }} C{{ avg_days.cats }} R{{ avg_days.rabbits }} O{{ avg_days.others }}</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  var intakeFormDate=document.querySelector('#id_intake_date');
+  if(intakeFormDate && !intakeFormDate.value){
+    intakeFormDate.value=new Date().toISOString().split('T')[0];
+  }
+});
+</script>
+
+<div class="modal fade" id="logIntakeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:620px;">
+    <div class="modal-content border-0" style="border-radius:var(--card-radius);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(52,196,138,.1),rgba(155,93,229,.1));padding:24px 24px 18px;">
+        <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:0;">Log New Intake</h5>
+      </div>
+      <form method="post" action="{% url 'log_shelter_intake' %}" enctype="multipart/form-data" style="padding:20px 24px 24px;">
+        {% csrf_token %}
+        <div class="row g-2">
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Animal Name</label>{{ intake_form.name }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Species</label>{{ intake_form.species }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Breed</label>{{ intake_form.breed }}</div>
+          <div class="col-md-3"><label class="form-label fw-semibold" style="font-size:.82rem;">Age</label>{{ intake_form.age }}</div>
+          <div class="col-md-3"><label class="form-label fw-semibold" style="font-size:.82rem;">Gender</label>{{ intake_form.gender }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Rescue Location</label>{{ intake_form.rescue_location }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Health Status</label>{{ intake_form.health_status }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Vaccination Status</label>{{ intake_form.vaccination_status }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Intake Date</label>{{ intake_form.intake_date }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Photo</label>{{ intake_form.photo }}</div>
+          <div class="col-12"><label class="form-label fw-semibold" style="font-size:.82rem;">Notes</label>{{ intake_form.description }}</div>
+        </div>
+        <button type="submit" class="btn btn-pill btn-rose w-100 mt-3">Save Intake</button>
+      </form>
+      <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:14px;right:14px;"></button>
+    </div>
+  </div>
+</div>
+{% endblock %}

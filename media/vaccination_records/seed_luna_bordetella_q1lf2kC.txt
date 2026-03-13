@@ -1,0 +1,4 @@
+Sample vaccination certificate
+Pet: Luna
+Vaccine: Bordetella
+Clinic: FluffBud Care Clinic

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Emergency SOS — PawNest{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="text-center mb-5">
+    <div style="width:80px;height:80px;background:linear-gradient(135deg,#ff4757,#c0392b);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px;box-shadow:0 6px 24px rgba(255,71,87,.5);animation:sosPulse 2s infinite;">🚨</div>
+    <h2 style="font-family:'Playfair Display',serif;font-weight:700;color:#ff4757;">Emergency Veterinary Assistance</h2>
+    <p class="text-muted">Find emergency vet clinics and contact numbers near you.</p>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card-soft p-4 text-center" style="border-left:4px solid #ff4757;">
+        <div style="font-size:32px;margin-bottom:8px;">📞</div>
+        <h6 class="fw-bold">National Pet Emergency</h6>
+        <div style="font-size:1.1rem;font-weight:700;color:#ff4757;">1800-XXX-XXXX</div>
+        <p class="text-muted" style="font-size:.82rem;margin:4px 0 0;">Available 24/7</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-soft p-4 text-center" style="border-left:4px solid #E0527A;">
+        <div style="font-size:32px;margin-bottom:8px;">🏥</div>
+        <h6 class="fw-bold">Animal Welfare Board</h6>
+        <div style="font-size:1.1rem;font-weight:700;color:#E0527A;">011-XXXXX-XXXXX</div>
+        <p class="text-muted" style="font-size:.82rem;margin:4px 0 0;">Mon–Sat 9AM–6PM</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-soft p-4 text-center" style="border-left:4px solid #9B5DE5;">
+        <div style="font-size:32px;margin-bottom:8px;">🚐</div>
+        <h6 class="fw-bold">Pet Ambulance</h6>
+        <div style="font-size:1.1rem;font-weight:700;color:#9B5DE5;">+91 98XXX XXXXX</div>
+        <p class="text-muted" style="font-size:.82rem;margin:4px 0 0;">Available in major cities</p>
+      </div>
+    </div>
+  </div>
+
+  {% if emergency_clinics %}
+  <h4 class="fw-bold mb-3">🚨 Emergency Clinics</h4>
+  <div class="row g-3 mb-4">
+    {% for clinic in emergency_clinics %}
+    <div class="col-md-4">
+      <div class="card-soft p-3" style="border-left:3px solid #ff4757;">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span style="font-size:20px;">🏥</span>
+          <div class="fw-bold">{{ clinic.clinic_name }}</div>
+          <span style="font-size:.72rem;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:999px;font-weight:600;margin-left:auto;">24/7</span>
+        </div>
+        <p style="font-size:.82rem;color:#7A6E78;margin-bottom:4px;">📍 {{ clinic.city }}</p>
+        <p style="font-size:.9rem;font-weight:600;color:#ff4757;">📞 {{ clinic.phone }}</p>
+        {% if clinic.specialization %}<p style="font-size:.8rem;color:#7A6E78;margin:0;">{{ clinic.specialization }}</p>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <h4 class="fw-bold mb-3">🏥 All Registered Clinics</h4>
+  <div class="row g-3">
+    {% for clinic in all_clinics %}
+    <div class="col-md-4">
+      <div class="card-soft p-3">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span style="font-size:18px;">🏥</span>
+          <div class="fw-semibold" style="font-size:.9rem;">{{ clinic.clinic_name }}</div>
+        </div>
+        <p style="font-size:.82rem;color:#7A6E78;margin-bottom:4px;">📍 {{ clinic.city }} · {{ clinic.working_hours }}</p>
+        <p style="font-size:.88rem;font-weight:600;color:#E0527A;margin:0;">📞 {{ clinic.phone }}</p>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12"><p class="text-muted text-center">No clinics registered yet. <a href="{% url 'signup' %}" style="color:#E0527A;">Are you a vet? Register here.</a></p></div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>@keyframes sosPulse{0%,100%{box-shadow:0 6px 24px rgba(255,71,87,.5)}50%{box-shadow:0 6px 40px rgba(255,71,87,.85)}}</style>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings — PawNest 🐾{% endblock %}
+
+{% block extra_css %}
+<style>
+.settings-wrap{max-width:880px;padding:34px 16px 60px;}
+.settings-card{padding:24px 24px 18px;margin-bottom:16px;}
+.settings-title{font-family:'Playfair Display',serif;font-weight:700;font-size:1.15rem;margin:0 0 16px;}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-top:1px solid rgba(155,93,229,.1);}
+.setting-row:first-child{border-top:none;padding-top:0;}
+.setting-label{font-size:.9rem;font-weight:600;color:var(--ink);margin:0;}
+.setting-sub{font-size:.8rem;color:var(--muted);margin:2px 0 0;}
+.theme-options{display:flex;gap:8px;}
+.theme-option{position:relative;}
+.theme-option input{position:absolute;opacity:0;pointer-events:none;}
+.theme-chip{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:1.5px solid rgba(155,93,229,.16);background:#fff;color:var(--muted);cursor:pointer;transition:var(--transition);}
+.theme-option input:checked + .theme-chip{border-color:var(--rose);color:var(--rose);background:rgba(224,82,122,.08);}
+.danger-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.btn-danger-soft{background:rgba(224,82,122,.08);color:var(--rose);border:1.5px solid rgba(224,82,122,.2);}
+.btn-danger-soft:hover{background:var(--rose);color:#fff;}
+@media(max-width:760px){
+  .setting-row{align-items:flex-start;flex-direction:column;}
+  .setting-row .form-select,.setting-row .form-check{width:100%;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container settings-wrap">
+  <span class="section-tag">Account Preferences</span>
+  <h1 class="page-header">Settings</h1>
+
+  <div class="card-soft settings-card">
+    <h2 class="settings-title">Appearance</h2>
+    <div class="setting-row">
+      <div>
+        <p class="setting-label">Theme selector icons</p>
+      </div>
+      <div class="theme-options">
+        <label class="theme-option" title="Light">
+          <input type="radio" name="theme_mode" checked>
+          <span class="theme-chip"><i class="fas fa-sun"></i></span>
+        </label>
+        <label class="theme-option" title="Dark">
+          <input type="radio" name="theme_mode">
+          <span class="theme-chip"><i class="fas fa-moon"></i></span>
+        </label>
+        <label class="theme-option" title="Auto">
+          <input type="radio" name="theme_mode">
+          <span class="theme-chip"><i class="fas fa-circle-half-stroke"></i></span>
+        </label>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <p class="setting-label">Language dropdown</p>
+      </div>
+      <select class="form-select" style="max-width:220px;">
+        <option selected>English</option>
+        <option>Spanish</option>
+        <option>French</option>
+        <option>German</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card-soft settings-card">
+    <h2 class="settings-title">Privacy &amp; Security</h2>
+    <div class="setting-row">
+      <div>
+        <p class="setting-label">Profile Visibility dropdown</p>
+      </div>
+      <select class="form-select" style="max-width:220px;">
+        <option selected>Public</option>
+        <option>Friends Only</option>
+        <option>Private</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <div>
+        <p class="setting-label">Location Sharing toggle</p>
+      </div>
+      <div class="form-check form-switch m-0">
+        <input class="form-check-input" type="checkbox" role="switch" checked style="width:2.7rem;height:1.4rem;">
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <p class="setting-label">Two Factor Auth toggle</p>
+      </div>
+      <div class="form-check form-switch m-0">
+        <input class="form-check-input" type="checkbox" role="switch" style="width:2.7rem;height:1.4rem;">
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft settings-card">
+    <h2 class="settings-title">Pet Preferences</h2>
+    <div class="setting-row">
+      <div>
+        <p class="setting-label">Preferred Pet Type dropdown</p>
+      </div>
+      <select class="form-select" style="max-width:220px;">
+        <option selected>Dogs</option>
+        <option>Cats</option>
+        <option>Rabbits</option>
+        <option>Birds</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <div>
+        <p class="setting-label">Vaccination Reminder toggle</p>
+      </div>
+      <div class="form-check form-switch m-0">
+        <input class="form-check-input" type="checkbox" role="switch" checked style="width:2.7rem;height:1.4rem;">
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft settings-card" style="border:1px solid rgba(224,82,122,.22);">
+    <h2 class="settings-title" style="color:var(--rose);">Danger Zone</h2>
+    <div class="danger-actions">
+      <button type="button" class="btn btn-pill btn-danger-soft">Clear All Data</button>
+      <button type="button" class="btn btn-pill btn-rose">Delete Account</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

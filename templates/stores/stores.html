@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Pet Stores — PawNest{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="section-tag">🛒 Stores</div>
+  <h2 class="page-header mb-4">Pet Stores Near You</h2>
+
+  <div class="card-soft p-3 mb-4">
+    <form method="get" class="d-flex gap-3 align-items-center flex-wrap" id="storeSearchForm">
+      <input class="form-control" type="text" name="city" id="storeCityInput" value="{{ city }}" placeholder="Search by city..." style="max-width:260px;"/>
+      <button type="submit" class="btn btn-pill btn-rose">🔍 Search</button>
+      {% if city %}<a href="{% url 'stores' %}" class="btn btn-pill btn-ghost">Clear</a>{% endif %}
+    </form>
+  </div>
+
+  <div class="row g-4" id="storeResults">
+    {% for store in stores %}
+    <div class="col-md-4 col-lg-3">
+      <div class="card-soft p-0 overflow-hidden h-100">
+        {% if store.photo %}<img src="{{ store.photo.url }}" style="width:100%;height:150px;object-fit:cover;"/>
+        {% else %}<div style="width:100%;height:150px;background:linear-gradient(135deg,#FFF5E8,#F5EEFF);display:flex;align-items:center;justify-content:center;font-size:48px;">🛒</div>{% endif %}
+        <div class="p-3">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <h6 class="fw-bold mb-0">{{ store.name }}</h6>
+            <span style="font-size:.85rem;color:#ff9500;font-weight:600;">⭐{{ store.rating }}</span>
+          </div>
+          <p style="font-size:.82rem;color:#7A6E78;margin-bottom:6px;">📍 {{ store.city }}</p>
+          <p style="font-size:.8rem;color:#7A6E78;margin-bottom:8px;">🕐 {{ store.working_hours }}</p>
+          <div class="d-flex flex-wrap gap-1">
+            {% for svc in store.services_list %}
+            <span style="font-size:.72rem;background:#F5EEFF;color:#7B3FCC;padding:3px 8px;border-radius:999px;font-weight:600;">{{ svc }}</span>
+            {% endfor %}
+          </div>
+          {% if store.phone %}<div style="font-size:.82rem;color:#E0527A;margin-top:8px;font-weight:600;">📞 {{ store.phone }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted"><div style="font-size:64px;">🛒</div><p>No stores found{% if city %} in "{{ city }}"{% endif %}.</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+  var form = document.getElementById('storeSearchForm');
+  var cityInput = document.getElementById('storeCityInput');
+  var resultsEl = document.getElementById('storeResults');
+  if (!form || !cityInput || !resultsEl) {
+    return;
+  }
+
+  function renderMessage(message) {
+    resultsEl.innerHTML = '<div class="col-12 text-center py-5 text-muted"><div style="font-size:64px;">🛒</div><p>' + message + '</p></div>';
+  }
+
+  function renderStores(stores) {
+    if (!stores || stores.length === 0) {
+      renderMessage('No pet stores found in this city.');
+      return;
+    }
+
+    var html = '';
+    stores.forEach(function (store) {
+      html +=
+        '<div class="col-md-4 col-lg-3">' +
+          '<div class="card-soft p-0 overflow-hidden h-100">' +
+            '<div style="width:100%;height:150px;background:linear-gradient(135deg,#FFF5E8,#F5EEFF);display:flex;align-items:center;justify-content:center;font-size:48px;">🛒</div>' +
+            '<div class="p-3">' +
+              '<div class="d-flex justify-content-between align-items-start mb-1">' +
+                '<h6 class="fw-bold mb-0">' + (store.name || '') + '</h6>' +
+                '<span style="font-size:.85rem;color:#ff9500;font-weight:600;">⭐' + (store.rating || '-') + '</span>' +
+              '</div>' +
+              '<p style="font-size:.82rem;color:#7A6E78;margin-bottom:6px;">📍 ' + (store.address || 'N/A') + '</p>' +
+              '<p style="font-size:.8rem;color:#7A6E78;margin-bottom:8px;">🏙️ ' + (store.city || '') + '</p>' +
+              '<div style="font-size:.82rem;color:#E0527A;margin-top:8px;font-weight:600;">📏 ' + (store.distance || '-') + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    });
+    resultsEl.innerHTML = html;
+  }
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var city = cityInput.value.trim();
+    renderMessage('Searching nearby stores...');
+
+    fetch('{% url "stores_api" %}?city=' + encodeURIComponent(city), {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error('Request failed');
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        renderStores(data);
+      })
+      .catch(function () {
+        renderMessage('Unable to fetch stores. Please try again.');
+      });
+  });
+});
+</script>
+{% endblock %}

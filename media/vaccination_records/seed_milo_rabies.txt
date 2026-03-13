@@ -1,0 +1,4 @@
+Sample vaccination certificate
+Pet: Milo
+Vaccine: Rabies
+Clinic: FluffBud Care Clinic
