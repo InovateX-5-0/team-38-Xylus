@@ -77,6 +77,26 @@ body.nav-open .nav-drawer{transform:translateX(0);}
 .alert-error,.alert-danger{background:#fee2e2;color:#991b1b;}
 .alert-warning{background:#fef3c7;color:#92400e;}
 footer.site-footer{background:var(--ink);color:rgba(255,255,255,0.6);padding:32px 0;text-align:center;font-size:0.88rem;margin-top:auto;}
+img,svg,video,canvas{max-width:100%;height:auto;}
+
+@media(max-width:992px){
+  .navbar .container-fluid{padding-left:12px!important;padding-right:12px!important;}
+  .navbar-brand{font-size:1.18rem;gap:8px;}
+  .brand-icon{width:30px;height:30px;}
+  .sos-btn{padding:8px 14px;font-size:.8rem;}
+  .main-content{padding:20px 14px;}
+  .page-header{font-size:1.5rem;}
+  .dropdown-menu{max-width:calc(100vw - 24px);}
+  .modal-dialog{margin:0.8rem auto;}
+}
+
+@media(max-width:576px){
+  .btn-pill{padding:8px 16px;font-size:.84rem;}
+  .section-tag{font-size:.72rem;padding:4px 10px;}
+  .nav-drawer{max-width:90vw;}
+  .sidebar-link{padding:11px 20px;}
+  .status-badge{font-size:.72rem;padding:3px 10px;}
+}
 </style>
 {% block extra_css %}{% endblock %}
 </head>
