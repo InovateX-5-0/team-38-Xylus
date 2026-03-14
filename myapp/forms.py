@@ -54,12 +54,11 @@ class PetForm(forms.ModelForm):
 class HealthRecordForm(forms.ModelForm):
     class Meta:
         model = HealthRecord
-        exclude = ['pet', 'vet', 'created_at']
+        fields = ['title', 'description', 'diagnosis', 'medications', 'date', 'weight_at_visit', 'attachment']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'diagnosis': forms.TextInput(attrs={'class': 'form-control'}),
-            'treatment': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'medications': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'weight_at_visit': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -70,13 +69,12 @@ class HealthRecordForm(forms.ModelForm):
 class VaccinationReminderForm(forms.ModelForm):
     class Meta:
         model = VaccinationReminder
-        exclude = ['pet', 'created_at']
+        fields = ['reminder_type', 'title', 'notes', 'due_date']
         widgets = {
             'reminder_type': forms.Select(attrs={'class': 'form-select'}),
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
         }
 
 

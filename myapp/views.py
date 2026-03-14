@@ -533,17 +533,21 @@ def pet_detail(request, pk):
             if record_form.is_valid():
                 rec = record_form.save(commit=False)
                 rec.pet = pet
+                rec.visit_status = 'completed'
                 rec.save()
                 messages.success(request, "Health record added!")
                 return redirect('pet_detail', pk=pk)
+            messages.error(request, "Please enter valid health record details.")
         elif 'add_reminder' in request.POST:
             reminder_form = VaccinationReminderForm(request.POST)
             if reminder_form.is_valid():
                 rem = reminder_form.save(commit=False)
                 rem.pet = pet
+                rem.status = 'pending'
                 rem.save()
                 messages.success(request, "Reminder set!")
                 return redirect('pet_detail', pk=pk)
+            messages.error(request, "Please enter valid reminder details.")
 
     return render(request, 'pets/pet_detail.html', {
         'pet': pet,
