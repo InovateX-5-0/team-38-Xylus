@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: fluffbud
+    env: python
+    buildCommand: bash build.sh
+    startCommand: gunicorn core.wsgi:application
