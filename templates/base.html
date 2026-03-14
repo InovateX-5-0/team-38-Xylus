@@ -48,10 +48,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);m
 .badge-available{background:#d1fae5;color:#065f46;}
 .badge-adopted{background:#dbeafe;color:#1e40af;}
 .status-badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:0.78rem;font-weight:600;}
-.sos-btn{position:relative;background:linear-gradient(135deg,#E0527A,#C73D62);color:#fff;border:none;border-radius:999px;padding:8px 20px;font-weight:700;font-size:0.88rem;box-shadow:0 4px 14px rgba(224,82,122,0.4);animation:sosPulse 2s infinite;transition:all .3s ease;text-decoration:none;}
-.sos-btn:hover{color:#fff;box-shadow:0 6px 28px rgba(224,82,122,0.65);transform:translateY(-1px);}
-.sos-dot{position:absolute;top:-2px;right:-2px;width:10px;height:10px;background:#ff4757;border-radius:50%;border:2px solid #fff;animation:sosDot 1.5s infinite;}
-@keyframes sosPulse{0%,100%{box-shadow:0 4px 14px rgba(224,82,122,0.4);}50%{box-shadow:0 4px 24px rgba(224,82,122,0.7);}}
+.navbar-actions{display:flex;align-items:center;gap:10px;}
+.nav-action-circle{width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:none;text-decoration:none;box-shadow:0 6px 18px rgba(26,18,32,0.15);transition:var(--transition);}
+.nav-action-circle:focus-visible{outline:2px solid rgba(155,93,229,0.4);outline-offset:2px;}
+.avatar-profile-btn{background:linear-gradient(135deg,var(--violet),var(--rose));color:#fff;font-weight:700;font-size:1rem;line-height:1;}
+.avatar-profile-btn:hover{color:#fff;transform:translateY(-1px);box-shadow:0 8px 22px rgba(155,93,229,0.3);}
+.avatar-profile-btn.dropdown-toggle::after{display:none;}
+.sos-btn{position:relative;background:linear-gradient(135deg,#ff4f6f,#E0527A);color:#fff;font-size:1rem;animation:sosPulse 1.8s infinite;}
+.sos-btn:hover{color:#fff;transform:translateY(-1px);}
+@keyframes sosPulse{0%,100%{box-shadow:0 6px 18px rgba(224,82,122,0.45);}50%{box-shadow:0 6px 26px rgba(224,82,122,0.7);}}
 @keyframes sosDot{0%,100%{opacity:1;}50%{opacity:.4;}}
 .sidebar{width:240px;background:#fff;border-right:1px solid rgba(155,93,229,0.1);min-height:calc(100vh - 64px);padding:24px 0;}
 .sidebar-link{display:flex;align-items:center;gap:12px;padding:12px 24px;color:var(--muted);font-weight:500;text-decoration:none;border-radius:0 999px 999px 0;margin-right:16px;transition:var(--transition);}
@@ -83,7 +88,9 @@ img,svg,video,canvas{max-width:100%;height:auto;}
   .navbar .container-fluid{padding-left:12px!important;padding-right:12px!important;}
   .navbar-brand{font-size:1.18rem;gap:8px;}
   .brand-icon{width:30px;height:30px;}
-  .sos-btn{padding:8px 14px;font-size:.8rem;}
+  .navbar-actions{gap:8px;}
+  .nav-action-circle{width:38px;height:38px;}
+  .sos-btn{font-size:.92rem;}
   .main-content{padding:20px 14px;}
   .page-header{font-size:1.5rem;}
   .dropdown-menu{max-width:calc(100vw - 24px);}
@@ -112,11 +119,13 @@ img,svg,video,canvas{max-width:100%;height:auto;}
         <div class="brand-icon"><img src="{% static '{css,js,images}/logo.png' %}" alt="fluffbud" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;"></div> fluffbud
       </a>
     </div>
-    <div class="d-flex align-items-center gap-3 ms-auto">
-      <a href="#" class="sos-btn" data-bs-toggle="modal" data-bs-target="#emergencySOSModal"><span class="sos-dot"></span>🚨 SOS</a>
+    <div class="navbar-actions ms-auto">
+      <a href="#" class="nav-action-circle sos-btn" data-bs-toggle="modal" data-bs-target="#emergencySOSModal" aria-label="Open emergency SOS">
+        <i class="fas fa-phone-alt" aria-hidden="true"></i>
+      </a>
       <div class="dropdown">
-          <button class="btn btn-pill btn-outline-rose dropdown-toggle" data-bs-toggle="dropdown">
-            🐱 {{ user.first_name|default:user.username }}
+          <button class="nav-action-circle avatar-profile-btn dropdown-toggle" data-bs-toggle="dropdown" aria-label="Open profile menu">
+            {{ user.first_name|default:user.username|make_list|first|upper }}
           </button>
           <div class="dropdown-menu dropdown-menu-end p-0 border-0" style="width:260px;border-radius:16px;box-shadow:0 8px 32px rgba(26,18,32,.12);overflow:hidden;margin-top:8px;">
             <!-- User Info Header -->
