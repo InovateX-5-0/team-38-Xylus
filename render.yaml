@@ -3,4 +3,4 @@ services:
     name: fluffbud
     env: python
     buildCommand: bash build.sh
-    startCommand: gunicorn core.wsgi:application
+    startCommand: gunicorn core.wsgi:application --workers 2 --threads 4 --timeout 120
