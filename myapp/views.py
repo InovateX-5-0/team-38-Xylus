@@ -11,11 +11,24 @@ from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 import json
 import requests
+from urllib.parse import urlparse
+from django.urls import reverse
 from .models import *
 from .forms import *
 
 
 # ─── AUTH ────────────────────────────────────────────────────────────────────
+
+def _safe_local_path(url_value):
+    if not url_value:
+        return ''
+    parsed = urlparse(url_value)
+    path = parsed.path or ''
+    if not path.startswith('/'):
+        return ''
+    if parsed.query:
+        return f"{path}?{parsed.query}"
+    return path
 
 def home(request):
     if request.user.is_authenticated:
@@ -34,7 +47,7 @@ def signup_view(request):
     if request.method == 'POST' and form.is_valid():
         user = form.save()
         login(request, user)
-        messages.success(request, f"Welcome to PawNest, {user.first_name}! 🐾")
+        messages.success(request, f"Welcome to fluffbud, {user.first_name}! 🐾")
         return redirect('dashboard')
     return render(request, 'accounts/signup.html', {'form': form})
 
@@ -42,6 +55,12 @@ def signup_view(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
+
+    if request.method == 'GET':
+        referrer_path = _safe_local_path(request.META.get('HTTP_REFERER', ''))
+        if referrer_path in [reverse('dashboard'), reverse('login')]:
+            request.session['previous_page'] = referrer_path
+
     form = LoginForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
         user = authenticate(request,
@@ -55,6 +74,20 @@ def login_view(request):
 
 
 def logout_view(request):
+    if request.user.is_authenticated and request.user.is_service_provider():
+        owner_role_backup = request.session.pop('owner_role_backup', None)
+        if owner_role_backup and owner_role_backup == 'owner':
+            request.user.role = owner_role_backup
+            request.user.save(update_fields=['role'])
+            request.session.pop('active_role', None)
+            request.session.pop('previous_page', None)
+            messages.success(request, 'Logged out as Service Provider. Back to your Pet Owner dashboard.')
+            return redirect('dashboard')
+
+        logout(request)
+        return redirect('home')
+
+    request.session.pop('previous_page', None)
     logout(request)
     return redirect('home')
 
@@ -1493,6 +1526,12 @@ def emergency(request):
 @login_required
 def provider_portal(request):
     if request.method == 'POST':
+        referrer_path = _safe_local_path(request.META.get('HTTP_REFERER', ''))
+        if referrer_path == reverse('dashboard'):
+            request.session['previous_page'] = referrer_path
+        elif 'previous_page' not in request.session:
+            request.session['previous_page'] = reverse('login')
+
         provider_type = request.POST.get('provider_type', '')
         role_map = {
             'vet': 'vet',
@@ -1503,6 +1542,9 @@ def provider_portal(request):
         new_role = role_map.get(provider_type)
         if new_role:
             user = request.user
+            if user.role == 'owner':
+                request.session['owner_role_backup'] = 'owner'
+            request.session['active_role'] = 'service_provider'
             user.role = new_role
             full_name = request.POST.get('full_name', '').strip()
             if full_name:
@@ -1513,7 +1555,7 @@ def provider_portal(request):
             if email:
                 user.email = email
             user.save()
-            messages.success(request, f"Welcome to PawNest as a {provider_type.title()}! 🛠️")
+            messages.success(request, f"Welcome to fluffbud as a {provider_type.title()}! 🛠️")
             return redirect('dashboard')
         messages.error(request, "Please select a provider type.")
     return redirect('dashboard')
@@ -1640,6 +1682,17 @@ def profile(request):
 
 @login_required
 def settings(request):
+    if request.method == 'POST':
+        visibility = request.POST.get('profile_visibility', 'private').strip().lower()
+        if visibility not in ['public', 'private']:
+            visibility = 'private'
+        request.user.profile_visibility = visibility
+
+        request.user.two_factor_enabled = request.POST.get('two_factor_enabled') == '1'
+        request.user.save(update_fields=['profile_visibility', 'two_factor_enabled'])
+        messages.success(request, 'Settings updated.')
+        return redirect('settings')
+
     return render(request, 'settings.html')
 
 

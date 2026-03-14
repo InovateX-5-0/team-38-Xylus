@@ -16,6 +16,12 @@ class CustomUser(AbstractUser):
     city = models.CharField(max_length=100, blank=True)
     profile_photo = models.ImageField(upload_to='profiles/', blank=True, null=True)
     bio = models.TextField(blank=True)
+    PROFILE_VISIBILITY_CHOICES = [
+        ('public', 'Public'),
+        ('private', 'Private'),
+    ]
+    profile_visibility = models.CharField(max_length=10, choices=PROFILE_VISIBILITY_CHOICES, default='private')
+    two_factor_enabled = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.get_full_name() or self.username} ({self.role})"

@@ -1,6 +1,7 @@
 {
   "name": "Pet Care Super App",
   "short_name": "PetCare",
+  "id": "/",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

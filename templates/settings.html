@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Settings — PawNest 🐾{% endblock %}
+{% block title %}Settings — fluffbud 🐾{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -39,83 +39,44 @@
       </div>
       <div class="theme-options">
         <label class="theme-option" title="Light">
-          <input type="radio" name="theme_mode" checked>
+          <input type="radio" name="theme_mode" value="light">
           <span class="theme-chip"><i class="fas fa-sun"></i></span>
         </label>
         <label class="theme-option" title="Dark">
-          <input type="radio" name="theme_mode">
+          <input type="radio" name="theme_mode" value="dark">
           <span class="theme-chip"><i class="fas fa-moon"></i></span>
         </label>
-        <label class="theme-option" title="Auto">
-          <input type="radio" name="theme_mode">
+        <label class="theme-option" title="System/Desktop">
+          <input type="radio" name="theme_mode" value="system">
           <span class="theme-chip"><i class="fas fa-circle-half-stroke"></i></span>
         </label>
       </div>
-    </div>
-    <div class="setting-row">
-      <div>
-        <p class="setting-label">Language dropdown</p>
-      </div>
-      <select class="form-select" style="max-width:220px;">
-        <option selected>English</option>
-        <option>Spanish</option>
-        <option>French</option>
-        <option>German</option>
-      </select>
     </div>
   </div>
 
   <div class="card-soft settings-card">
     <h2 class="settings-title">Privacy &amp; Security</h2>
+    <form method="post">
+      {% csrf_token %}
     <div class="setting-row">
       <div>
         <p class="setting-label">Profile Visibility dropdown</p>
       </div>
-      <select class="form-select" style="max-width:220px;">
-        <option selected>Public</option>
-        <option>Friends Only</option>
-        <option>Private</option>
+      <select class="form-select" name="profile_visibility" id="profileVisibility" style="max-width:220px;">
+        <option value="public" {% if user.profile_visibility == 'public' %}selected{% endif %}>Public</option>
+        <option value="private" {% if user.profile_visibility != 'public' %}selected{% endif %}>Private</option>
       </select>
-    </div>
-    <div class="setting-row">
-      <div>
-        <p class="setting-label">Location Sharing toggle</p>
-      </div>
-      <div class="form-check form-switch m-0">
-        <input class="form-check-input" type="checkbox" role="switch" checked style="width:2.7rem;height:1.4rem;">
-      </div>
     </div>
     <div class="setting-row">
       <div>
         <p class="setting-label">Two Factor Auth toggle</p>
       </div>
       <div class="form-check form-switch m-0">
-        <input class="form-check-input" type="checkbox" role="switch" style="width:2.7rem;height:1.4rem;">
+        <input type="hidden" name="two_factor_enabled" value="0">
+        <input class="form-check-input" id="twoFactorEnabled" name="two_factor_enabled" value="1" type="checkbox" role="switch" {% if user.two_factor_enabled %}checked{% endif %} style="width:2.7rem;height:1.4rem;">
       </div>
     </div>
-  </div>
-
-  <div class="card-soft settings-card">
-    <h2 class="settings-title">Pet Preferences</h2>
-    <div class="setting-row">
-      <div>
-        <p class="setting-label">Preferred Pet Type dropdown</p>
-      </div>
-      <select class="form-select" style="max-width:220px;">
-        <option selected>Dogs</option>
-        <option>Cats</option>
-        <option>Rabbits</option>
-        <option>Birds</option>
-      </select>
-    </div>
-    <div class="setting-row">
-      <div>
-        <p class="setting-label">Vaccination Reminder toggle</p>
-      </div>
-      <div class="form-check form-switch m-0">
-        <input class="form-check-input" type="checkbox" role="switch" checked style="width:2.7rem;height:1.4rem;">
-      </div>
-    </div>
+    </form>
   </div>
 
   <div class="card-soft settings-card" style="border:1px solid rgba(224,82,122,.22);">
@@ -126,4 +87,75 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  var THEME_KEY = 'theme_preference';
+  var root = document.documentElement;
+  var media = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function applyLight(){
+    root.style.setProperty('--ink', '#1A1220');
+    root.style.setProperty('--muted', '#7A6E78');
+    root.style.setProperty('--cream', '#FAF8F5');
+    root.style.setProperty('--cream-dark', '#F2EDE8');
+  }
+
+  function applyDark(){
+    root.style.setProperty('--ink', '#F4ECFF');
+    root.style.setProperty('--muted', '#D7CBE2');
+    root.style.setProperty('--cream', '#191321');
+    root.style.setProperty('--cream-dark', '#241B2F');
+  }
+
+  function applyTheme(mode){
+    var effective = mode;
+    if (mode === 'system') {
+      effective = media.matches ? 'dark' : 'light';
+    }
+    if (effective === 'dark') {
+      applyDark();
+    } else {
+      applyLight();
+    }
+  }
+
+  function selectChip(mode){
+    var input = document.querySelector('input[name="theme_mode"][value="' + mode + '"]');
+    if (input) input.checked = true;
+  }
+
+  var saved = localStorage.getItem(THEME_KEY) || 'system';
+  selectChip(saved);
+  applyTheme(saved);
+
+  document.querySelectorAll('input[name="theme_mode"]').forEach(function(input){
+    input.addEventListener('change', function(){
+      localStorage.setItem(THEME_KEY, input.value);
+      applyTheme(input.value);
+    });
+  });
+
+  media.addEventListener('change', function(){
+    if ((localStorage.getItem(THEME_KEY) || 'system') === 'system') {
+      applyTheme('system');
+    }
+  });
+
+  var visibility = document.getElementById('profileVisibility');
+  var twoFactor = document.getElementById('twoFactorEnabled');
+  if (visibility) {
+    visibility.addEventListener('change', function(){
+      visibility.form.submit();
+    });
+  }
+  if (twoFactor) {
+    twoFactor.addEventListener('change', function(){
+      twoFactor.form.submit();
+    });
+  }
+})();
+</script>
 {% endblock %}
