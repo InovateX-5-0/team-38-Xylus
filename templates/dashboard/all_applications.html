@@ -15,7 +15,7 @@
       <button class="btn btn-pill {% if not status_filter %}btn-rose{% else %}btn-ghost{% endif %}" name="status" value="">All</button>
       <button class="btn btn-pill {% if status_filter == 'pending' %}btn-rose{% else %}btn-ghost{% endif %}" name="status" value="pending">Pending</button>
       <button class="btn btn-pill {% if status_filter == 'approved' %}btn-rose{% else %}btn-ghost{% endif %}" name="status" value="approved">Approved</button>
-      <button class="btn btn-pill {% if status_filter == 'denied' %}btn-rose{% else %}btn-ghost{% endif %}" name="status" value="denied">Denied</button>
+      <button class="btn btn-pill {% if status_filter == 'rejected' or status_filter == 'denied' %}btn-rose{% else %}btn-ghost{% endif %}" name="status" value="rejected">Rejected</button>
     </form>
   </div>
 
@@ -26,16 +26,18 @@
         <div class="d-flex justify-content-between align-items-start mb-2">
           <div>
             <div class="fw-semibold">{{ app.applicant_name }} <span style="font-size:.8rem;color:#7A6E78;font-weight:500;">· {{ app.contact_info }}</span></div>
-            <div style="font-size:.82rem;color:#7A6E78;">Animal: {{ app.animal.name }} ({{ app.animal.get_species_display }})</div>
+            <div style="font-size:.82rem;color:#7A6E78;">Pet: {{ app.animal.name }} ({{ app.animal.get_species_display }}) · {{ app.animal.age_display }}</div>
+            <div style="font-size:.8rem;color:#7A6E78;">Found At: {{ app.animal.rescue_location|default:'Unknown' }}</div>
+            <div style="font-size:.8rem;color:#7A6E78;">Vaccination Records: {{ app.vaccination_record_text }}</div>
             <div style="font-size:.8rem;color:#7A6E78;">Living Situation: {{ app.living_situation }}</div>
             {% if app.pet_experience %}<div style="font-size:.8rem;color:#7A6E78;">Experience: {{ app.pet_experience|truncatechars:90 }}</div>{% endif %}
             {% if app.notes %}<div style="font-size:.8rem;color:#7A6E78;">Notes: {{ app.notes|truncatechars:100 }}</div>{% endif %}
           </div>
           <div class="d-flex align-items-center gap-2">
-            <span class="status-badge badge-{{ app.status }}">{{ app.get_status_display }}</span>
+            <span class="status-badge badge-{% if app.status == 'rejected' or app.status == 'denied' %}denied{% else %}{{ app.status }}{% endif %}">{% if app.status == 'rejected' or app.status == 'denied' %}Rejected{% else %}{{ app.get_status_display }}{% endif %}</span>
             {% if app.status == 'pending' %}
             <a href="{% url 'manage_adoption_request' app.pk 'approve' %}" class="btn btn-sm rounded-pill px-3" style="background:#d1fae5;color:#065f46;font-weight:600;border:none;font-size:.78rem;">Approve</a>
-            <a href="{% url 'manage_adoption_request' app.pk 'deny' %}" class="btn btn-sm rounded-pill px-3" style="background:#fee2e2;color:#991b1b;font-weight:600;border:none;font-size:.78rem;">Deny</a>
+            <a href="{% url 'manage_adoption_request' app.pk 'deny' %}" class="btn btn-sm rounded-pill px-3" style="background:#fee2e2;color:#991b1b;font-weight:600;border:none;font-size:.78rem;">Reject</a>
             {% endif %}
           </div>
         </div>

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Application Submitted — fluffbud{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:620px;">
+  <div class="section-tag">✅ Adoption</div>
+  <h2 class="page-header mb-4">Application Received</h2>
+  <div class="card-soft p-4 text-center">
+    <div style="font-size:46px;margin-bottom:8px;">🐾</div>
+    <p class="mb-2" style="font-size:.95rem;">Your adoption application for <strong>{{ application.animal.name }}</strong> has been submitted successfully.</p>
+    <p class="text-muted mb-4" style="font-size:.85rem;">Status: <span class="status-badge badge-pending">{{ application.get_status_display }}</span></p>
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+      <a href="{% url 'adoption' %}" class="btn btn-pill btn-rose">Back to Listings</a>
+      <a href="{% url 'dashboard' %}" class="btn btn-pill btn-ghost">Go to Dashboard</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

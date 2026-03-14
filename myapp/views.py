@@ -69,7 +69,7 @@ def login_view(request):
         if user:
             login(request, user)
             return redirect('dashboard')
-        messages.error(request, 'Invalid username or password.')
+        messages.error(request, 'Invalid username or password')
     return render(request, 'accounts/login.html', {'form': form})
 
 
@@ -153,7 +153,8 @@ def dashboard(request):
 
     elif user.role == 'shelter':
         animals = Animal.objects.filter(shelter=user).order_by('-intake_date')
-        in_care = animals.filter(adoption_status='available')
+        in_care = animals.exclude(adoption_status='adopted')
+        listed_for_adoption = animals.filter(adoption_status='listed')
         applications = AdoptionApplication.objects.filter(animal__shelter=user).select_related('animal').order_by('-created_at')
         today = timezone.now().date()
         current_month_start = today.replace(day=1)
@@ -165,8 +166,9 @@ def dashboard(request):
         species_counts = {
             'dogs': in_care.filter(species='dog').count(),
             'cats': in_care.filter(species='cat').count(),
+            'birds': in_care.filter(species='bird').count(),
             'rabbits': in_care.filter(species='rabbit').count(),
-            'others': in_care.exclude(species__in=['dog', 'cat', 'rabbit']).count(),
+            'others': in_care.exclude(species__in=['dog', 'cat', 'bird', 'rabbit']).count(),
         }
         shelter_capacity = 100
 
@@ -201,12 +203,16 @@ def dashboard(request):
             'animals': animals,
             'service_provider': user.service_profiles.first(),
             'available_listings': in_care,
+            'listed_animals': listed_for_adoption[:8],
             'pending_requests': pending_apps[:10],
             'recent_intakes': recent_intakes_qs[:8],
             'total_listings': animals.count(),
             'available_count': in_care.count(),
             'adopted_count': animals.filter(adoption_status='adopted').count(),
             'animals_in_care': in_care.count(),
+            'animals_listed_for_adoption': listed_for_adoption.count(),
+            'total_adoption_applications': applications.count(),
+            'recently_added_animals': recent_intakes_qs.count(),
             'adopted_this_month': adopted_this_month,
             'pending_apps_count': pending_apps.count(),
             'new_intakes_today': new_intakes_today,
@@ -220,6 +226,7 @@ def dashboard(request):
                 'others': avg_days_map.get('other', 0),
             },
             'intake_form': AnimalIntakeForm(),
+            'animal_inventory': animals.values('id', 'name', 'species', 'adoption_status')[:20],
             'intake_labels': json.dumps(intake_labels),
             'intake_counts': json.dumps(intake_counts),
             'adoption_counts': json.dumps(adopt_counts),
@@ -233,7 +240,7 @@ def dashboard(request):
             store = None
 
         products = ProductInventory.objects.filter(store=store).select_related('supplier').order_by('-created_at') if store else ProductInventory.objects.none()
-        low_stock_products = [product for product in products if product.is_low_stock and product.stock_quantity > 0]
+        low_stock_products = products.filter(stock_quantity__gt=0, stock_quantity__lt=5) if store else ProductInventory.objects.none()
         out_of_stock_products = products.filter(stock_quantity=0) if store else ProductInventory.objects.none()
 
         today = timezone.now().date()
@@ -255,7 +262,19 @@ def dashboard(request):
                         .filter(order__store=store, order__status='delivered')
                         .values('product__product_name', 'product__category')
                         .annotate(total_units_sold=Sum('quantity'))
-                        .order_by('-total_units_sold')[:5]) if store else []
+                        .order_by('-total_units_sold')[:3]) if store else []
+
+        for order in orders[:20]:
+            if order.status in ['packed', 'shipped']:
+                order.dashboard_status = 'Packed'
+            elif order.status in ['processing', 'packing']:
+                order.dashboard_status = 'Processing'
+            else:
+                order.dashboard_status = 'Delivered'
+
+        packed_count = orders.filter(status__in=['packed', 'shipped']).count() if store else 0
+        processing_count = orders.filter(status__in=['processing', 'packing']).count() if store else 0
+        delivered_count = orders.filter(status='delivered').count() if store else 0
 
         suppliers = Supplier.objects.filter(owner=user).order_by('name')
         context = {
@@ -263,7 +282,7 @@ def dashboard(request):
             'service_provider': user.service_profiles.first(),
             'inventory': products,
             'inventory_count': products.count() if store else 0,
-            'low_stock_count': len(low_stock_products) + (out_of_stock_products.count() if store else 0),
+            'low_stock_count': (low_stock_products.count() if store else 0) + (out_of_stock_products.count() if store else 0),
             'low_stock_items': low_stock_products[:6],
             'out_of_stock_items': out_of_stock_products[:4] if store else [],
             'top_products': top_products,
@@ -271,6 +290,9 @@ def dashboard(request):
             'orders': orders[:20],
             'orders_today_count': CustomerOrder.objects.filter(store=store, created_at__date=today).count() if store else 0,
             'today_revenue': delivered_today['revenue'] or 0,
+            'packed_count': packed_count,
+            'processing_count': processing_count,
+            'delivered_count': delivered_count,
             'order_range': order_range,
             'product_form': ProductInventoryForm(),
             'suppliers': suppliers,
@@ -281,6 +303,7 @@ def dashboard(request):
         service = user.service_profiles.first()
         bookings = ServiceBooking.objects.filter(service__owner=user).select_related('pet', 'customer').order_by('-date', '-time')
         pending_bookings = bookings.filter(status='pending')
+        new_booking_requests = pending_bookings.filter(notification_seen=False)
         today = timezone.now().date()
         todays_bookings = bookings.filter(date=today)
 
@@ -308,8 +331,14 @@ def dashboard(request):
                 session.display_status = display_status
 
             supplies = GroomingSupply.objects.filter(groomer=user).order_by('product_name')
-            low_stock_items = [item for item in supplies if item.is_low_stock and item.quantity > 0]
+            low_stock_items = supplies.filter(quantity__gt=0, quantity__lt=5)
             out_of_stock_items = supplies.filter(quantity=0)
+
+            most_used_products = (ProductUsage.objects
+                                  .filter(groomer=user)
+                                  .values('supply__product_name', 'supply__category')
+                                  .annotate(total_used=Sum('used_count'))
+                                  .order_by('-total_used')[:5])
 
             care_notes = (ClientCareNote.objects
                           .filter(groomer=user)
@@ -350,9 +379,11 @@ def dashboard(request):
                 'bookings': bookings[:10],
                 'todays_sessions': today_sessions,
                 'sessions_today': len(today_sessions),
+                'bookings_today': todays_bookings.count(),
                 'currently_grooming': len([session for session in today_sessions if session.display_status == 'now']),
                 'regular_clients': sessions_qs.values('owner').distinct().count() or bookings.values('customer').distinct().count(),
                 'pending_count': pending_bookings.count(),
+                'new_booking_requests_count': new_booking_requests.count(),
                 'total_bookings': bookings.count(),
                 'confirmed_count': bookings.filter(status='confirmed').count(),
                 'completed_today': len([session for session in today_sessions if session.display_status == 'done']),
@@ -360,9 +391,10 @@ def dashboard(request):
                 'today_revenue': today_revenue,
                 'supplies': supplies[:12],
                 'supply_count': supplies.count(),
-                'low_stock_count': len(low_stock_items) + out_of_stock_items.count(),
+                'low_stock_count': low_stock_items.count() + out_of_stock_items.count(),
                 'low_stock_items': low_stock_items[:8],
                 'out_of_stock_items': out_of_stock_items[:6],
+                'most_used_products': most_used_products,
                 'care_notes': care_notes,
                 'supply_form': GroomingSupplyForm(),
                 'care_note_form': ClientCareNoteForm(groomer=user),
@@ -777,7 +809,7 @@ def all_patient_records(request):
 
 def adoption(request):
     species_filter = request.GET.get('species', '')
-    listings = Animal.objects.filter(adoption_status='available')
+    listings = Animal.objects.filter(adoption_status__in=['listed', 'available'])
     if species_filter:
         listings = listings.filter(species__icontains=species_filter)
     return render(request, 'adoption/adoption.html', {'listings': listings, 'species_filter': species_filter})
@@ -785,7 +817,7 @@ def adoption(request):
 
 @login_required
 def adoption_request(request, pk):
-    listing = get_object_or_404(Animal, pk=pk, adoption_status='available')
+    listing = get_object_or_404(Animal, pk=pk, adoption_status__in=['listed', 'available'])
     if request.user == listing.shelter:
         messages.error(request, "You can't adopt your own listing.")
         return redirect('adoption')
@@ -799,11 +831,17 @@ def adoption_request(request, pk):
         req.animal = listing
         req.applicant = request.user
         req.save()
-        messages.success(request, "Adoption request submitted! 🐾")
-        return redirect('adoption')
+        messages.success(request, "Application received")
+        return redirect('adoption_application_confirmation', pk=req.pk)
     return render(request, 'adoption/adoption_request.html', {
         'listing': listing, 'form': form, 'existing': existing
     })
+
+
+@login_required
+def adoption_application_confirmation(request, pk):
+    application = get_object_or_404(AdoptionApplication, pk=pk, applicant=request.user)
+    return render(request, 'adoption/application_confirmation.html', {'application': application})
 
 
 @login_required
@@ -815,7 +853,7 @@ def manage_adoption_request(request, pk, action):
         req.animal.adopted_at = timezone.now().date()
         req.animal.save()
 
-        AdoptionApplication.objects.filter(animal=req.animal, status='pending').exclude(pk=req.pk).update(status='denied')
+        AdoptionApplication.objects.filter(animal=req.animal, status='pending').exclude(pk=req.pk).update(status='rejected')
 
         days_to_adoption = max((req.animal.adopted_at - req.animal.intake_date).days, 0)
         AdoptionRecord.objects.get_or_create(
@@ -830,7 +868,7 @@ def manage_adoption_request(request, pk, action):
         )
         messages.success(request, f"Adoption approved for {req.applicant_name}!")
     elif action in ['reject', 'deny']:
-        req.status = 'denied'
+        req.status = 'rejected'
     req.save()
     return redirect('dashboard')
 
@@ -842,8 +880,14 @@ def view_all_applications(request):
 
     status_filter = request.GET.get('status', '').strip().lower()
     applications = AdoptionApplication.objects.filter(animal__shelter=request.user).select_related('animal').order_by('-created_at')
-    if status_filter in ['pending', 'approved', 'denied']:
+    if status_filter in ['pending', 'approved', 'rejected']:
         applications = applications.filter(status=status_filter)
+    elif status_filter == 'denied':
+        applications = applications.filter(status__in=['rejected', 'denied'])
+
+    for application in applications:
+        listing = application.animal.adoption_listings.order_by('-created_at').first()
+        application.vaccination_record_text = listing.vaccination_records if listing and listing.vaccination_records else application.animal.get_vaccination_status_display()
 
     return render(request, 'dashboard/all_applications.html', {
         'applications': applications,
@@ -871,7 +915,9 @@ def log_shelter_intake(request):
             health_status=animal.health_status,
             vaccination_status=animal.vaccination_status,
         )
-        messages.success(request, 'New intake logged successfully.')
+        messages.success(request, 'Animal intake logged successfully')
+    elif request.method == 'POST':
+        messages.error(request, 'Please provide valid intake details.')
 
     return redirect('dashboard')
 
@@ -881,13 +927,34 @@ def add_adoption_listing(request):
     if request.user.role != 'shelter':
         messages.error(request, "Only shelters can add adoption listings.")
         return redirect('adoption')
-    form = AdoptionListingForm(request.POST or None, request.FILES or None)
+
+    form = AdoptionListingForm(request.user, request.POST or None)
     if request.method == 'POST' and form.is_valid():
         listing = form.save(commit=False)
         listing.shelter = request.user
+        selected_animal = form.cleaned_data['animal']
+        listing.animal = selected_animal
+        listing.name = selected_animal.name
+        listing.species = selected_animal.species
+        listing.breed = selected_animal.breed
+        listing.age = selected_animal.age
+        listing.gender = selected_animal.gender
+        listing.size = selected_animal.size
+        listing.color = ''
+        listing.photo = selected_animal.photo
+        listing.description = form.cleaned_data['adoption_description']
+        listing.vaccinated = selected_animal.vaccination_status == 'up_to_date'
+        listing.neutered = False
+        listing.location = selected_animal.rescue_location or request.user.city or 'Shelter'
+        listing.status = 'available'
         listing.save()
-        messages.success(request, "Adoption listing added!")
-        return redirect('dashboard')
+        selected_animal.adoption_status = 'listed'
+        selected_animal.save(update_fields=['adoption_status'])
+        messages.success(request, 'Adoption listing created successfully')
+        return redirect('adoption')
+    elif request.method == 'POST':
+        messages.error(request, 'Please provide valid listing details.')
+
     return render(request, 'adoption/add_listing.html', {'form': form})
 
 
@@ -1042,7 +1109,7 @@ def manage_store(request):
         s = form.save(commit=False)
         s.owner = request.user
         s.save()
-        messages.success(request, "Store profile updated!")
+        messages.success(request, "Store details updated successfully")
         return redirect('dashboard')
     return render(request, 'stores/manage_store.html', {'form': form, 'store': store})
 
@@ -1075,23 +1142,18 @@ def add_product_inventory(request):
         messages.error(request, "Please set up your store first.")
         return redirect('manage_store')
 
-    form = ProductInventoryForm(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        supplier_name = form.cleaned_data['supplier_shop'].strip()
-        supplier, _ = Supplier.objects.get_or_create(owner=request.user, name=supplier_name)
-        ProductInventory.objects.create(
-            store=store,
-            product_name=form.cleaned_data['product_name'],
-            category=form.cleaned_data['category'],
-            stock_quantity=form.cleaned_data['quantity'],
-            unit_type=form.cleaned_data['unit_type'],
-            price_per_unit=form.cleaned_data['price_per_unit'],
-            supplier=supplier,
-        )
-        messages.success(request, "Product added to inventory successfully.")
-    elif request.method == 'POST':
-        messages.error(request, "Please provide valid product details.")
-    return redirect('dashboard')
+    form = ProductInventoryForm(request.POST or None, request.FILES or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            product = form.save(commit=False)
+            product.store = store
+            product.save()
+            messages.success(request, "Product added to inventory successfully")
+            return redirect('dashboard')
+        messages.error(request, "Please provide valid product details")
+        return redirect('dashboard')
+
+    return render(request, 'stores/add_product.html', {'form': form, 'store': store})
 
 
 @login_required
@@ -1158,11 +1220,17 @@ def store_orders_api(request):
 
     payload = []
     for order in orders[:100]:
+        if order.status in ['packed', 'shipped']:
+            status_label = 'Packed'
+        elif order.status in ['processing', 'packing']:
+            status_label = 'Processing'
+        else:
+            status_label = 'Delivered'
         payload.append({
             'order_id': order.id,
             'customer_name': order.customer_name,
             'order_source': order.get_order_source_display(),
-            'status': order.get_status_display(),
+            'status': status_label,
             'products': [
                 {
                     'name': item.product.product_name,
@@ -1258,16 +1326,46 @@ def manage_service(request):
 @login_required
 def book_service(request, pk):
     service = get_object_or_404(ServiceProvider, pk=pk, is_active=True)
-    form = ServiceBookingForm(user=request.user, service=service, data=request.POST or None)
+    form = GroomingBookingForm(user=request.user, service=service, data=request.POST or None)
     if request.method == 'POST' and form.is_valid():
         booking = form.save(commit=False)
         booking.customer = request.user
         booking.service = service
+        booking.status = 'pending'
         booking.notification_seen = False
         booking.save()
         messages.success(request, f"Booking requested with {service.name}! 🐾")
         return redirect('services')
     return render(request, 'services/book_service.html', {'form': form, 'service': service})
+
+
+def _track_grooming_product_usage(booking, groomer):
+    service_map = {
+        'bath_brush': ['shampoo', 'conditioner', 'brush'],
+        'full_groom': ['shampoo', 'conditioner', 'clipper'],
+        'breed_cut': ['clipper', 'blades'],
+        'nail_trim': ['clipper'],
+        'de_shedding': ['de_shedding', 'brush'],
+    }
+    preferred_categories = service_map.get(booking.service_type, ['other'])
+
+    for category in preferred_categories:
+        supply = (GroomingSupply.objects
+                  .filter(groomer=groomer, category=category, quantity__gt=0)
+                  .order_by('-quantity')
+                  .first())
+        if not supply:
+            continue
+
+        ProductUsage.objects.create(
+            groomer=groomer,
+            supply=supply,
+            booking=booking,
+            used_count=1,
+        )
+
+        supply.quantity = max(supply.quantity - 1, 0)
+        supply.save(update_fields=['quantity', 'updated_at'])
 
 
 @login_required
@@ -1294,6 +1392,8 @@ def update_service_booking(request, pk, status):
                     'status': 'completed' if status == 'completed' else ('cancelled' if status == 'cancelled' else 'scheduled'),
                 }
             )
+            if status == 'completed':
+                _track_grooming_product_usage(booking, request.user)
         messages.success(request, f"Booking {status}.")
     return redirect('dashboard')
 
@@ -1312,7 +1412,12 @@ def keep_waiting_grooming_booking(request, pk):
     )
     booking.notification_seen = True
     booking.save(update_fields=['notification_seen'])
-    return JsonResponse({'ok': True})
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True})
+
+    messages.info(request, 'Booking kept in pending queue.')
+    return redirect('dashboard')
 
 
 @login_required
@@ -1347,7 +1452,7 @@ def accept_grooming_booking(request, pk):
             'status': 'scheduled',
         }
     )
-    messages.success(request, 'Grooming session accepted and added to today\'s sessions.')
+    messages.success(request, 'Booking confirmed')
     return redirect('dashboard')
 
 
@@ -1390,7 +1495,7 @@ def reschedule_grooming_booking(request, pk):
                     'status': 'scheduled',
                 }
             )
-            messages.success(request, 'Session rescheduled successfully.')
+            messages.success(request, 'Booking rescheduled')
         except Exception:
             messages.error(request, 'Please provide a valid date and time.')
     return redirect('dashboard')
@@ -1406,16 +1511,73 @@ def add_grooming_supply(request):
         return redirect('dashboard')
 
     if request.method == 'POST':
-        form = GroomingSupplyForm(request.POST)
+        form = GroomerInventoryForm(request.POST)
         if form.is_valid():
             supply = form.save(commit=False)
             supply.groomer = request.user
             supply.service = service
             supply.save()
-            messages.success(request, 'Supply item added successfully.')
+            messages.success(request, 'Product added to inventory')
+            if supply.quantity < 5:
+                messages.warning(request, 'Low stock alert')
         else:
             messages.error(request, 'Please provide valid supply details.')
+    return redirect('groomer_inventory')
+
+
+@login_required
+def groomer_dashboard(request):
     return redirect('dashboard')
+
+
+@login_required
+def groomer_bookings(request):
+    return redirect('dashboard')
+
+
+@login_required
+def groomer_inventory(request):
+    return redirect('dashboard')
+
+
+@login_required
+def update_groomer_booking_status(request, pk, status):
+    if status == 'accept':
+        return accept_grooming_booking(request, pk)
+    if status == 'keep-waiting':
+        return keep_waiting_grooming_booking(request, pk)
+    if status == 'reschedule':
+        return reschedule_grooming_booking(request, pk)
+    return redirect('dashboard')
+
+
+@login_required
+def track_product_usage(request):
+    if request.user.role != 'provider' or request.method != 'POST':
+        return JsonResponse({'ok': False}, status=403)
+
+    try:
+        supply_id = int(request.POST.get('supply_id', '0'))
+        booking_id = int(request.POST.get('booking_id', '0') or 0)
+        used_count = int(request.POST.get('used_count', '1') or 1)
+        used_count = max(used_count, 1)
+
+        supply = get_object_or_404(GroomingSupply, pk=supply_id, groomer=request.user)
+        booking = ServiceBooking.objects.filter(pk=booking_id, service__owner=request.user).first() if booking_id else None
+
+        ProductUsage.objects.create(
+            groomer=request.user,
+            supply=supply,
+            booking=booking,
+            used_count=used_count,
+        )
+
+        supply.quantity = max(supply.quantity - used_count, 0)
+        supply.save(update_fields=['quantity', 'updated_at'])
+
+        return JsonResponse({'ok': True})
+    except Exception:
+        return JsonResponse({'ok': False}, status=400)
 
 
 @login_required
