@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Store Dashboard — PawNest{% endblock %}
+{% block title %}Store Dashboard — fluffbud{% endblock %}
 {% block content %}
 <div style="background:linear-gradient(135deg,#fff8f0,#f5eeff);min-height:calc(100vh - 64px);">
   <div class="container-fluid py-4 px-4">
@@ -15,7 +15,7 @@
         <div class="d-flex gap-2">
           <a href="#" data-bs-toggle="modal" data-bs-target="#serviceProviderLoginModal" class="btn btn-pill" style="background:#fff;border:1.5px solid #9B5DE5;color:#9B5DE5;padding:10px 20px;border-radius:999px;font-weight:600;"><i class="fas fa-exchange-alt me-1"></i>Switch Account</a>
           <a href="{% url 'manage_store' %}" class="btn btn-pill" style="background:#fff;border:1.5px solid #E0527A;color:#E0527A;padding:10px 20px;border-radius:999px;font-weight:600;">Edit Store</a>
-          <a href="{% url 'add_inventory' %}" class="btn btn-pill btn-rose">+ Add Item</a>
+          <a href="{% url 'add_product_inventory' %}" class="btn btn-pill btn-rose">+ Add Product</a>
         </div>
       </div>
     </div>
@@ -89,9 +89,9 @@
                 <div class="fw-semibold mb-1">{{ item.product_name }}</div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <span style="color:#E0527A;font-weight:700;font-size:1.05rem;">₹{{ item.price_per_unit }}</span>
-                  <span style="font-size:.8rem;color:#7A6E78;">{{ item.stock_quantity }} {{ item.unit_type }}</span>
+                  <span style="font-size:.8rem;color:#7A6E78;">Stock: {{ item.stock_quantity }}</span>
                 </div>
-                <div style="font-size:.78rem;color:#7A6E78;">Supplier: {{ item.supplier.name|default:'N/A' }}</div>
+                <div style="font-size:.78rem;color:#7A6E78;">Category: {{ item.get_category_display }}</div>
               </div>
             </div>
             {% endfor %}
@@ -99,7 +99,7 @@
           {% else %}
           <div class="text-center py-5 text-muted">
             <div style="font-size:48px;">📦</div>
-            <p style="font-size:.88rem;">No inventory yet. <a href="{% url 'add_inventory' %}" style="color:#E0527A;">Add your first item!</a></p>
+            <p style="font-size:.88rem;">No inventory yet. Add your first item.</p>
           </div>
           {% endif %}
         </div>
@@ -121,9 +121,14 @@
                 <div class="fw-semibold" style="font-size:.88rem;">Order #{{ order.id }} · {{ order.customer_name }}</div>
                 <div style="font-size:.78rem;color:#7A6E78;">{{ order.get_order_source_display }} · {% for oi in order.items.all %}{{ oi.product.product_name }} ({{ oi.quantity }}){% if not forloop.last %}, {% endif %}{% endfor %}</div>
               </div>
-              <span class="status-badge" style="background:#E8F4FF;color:#1e40af;font-size:.72rem;">{{ order.get_status_display }}</span>
+              <span class="status-badge" style="background:#E8F4FF;color:#1e40af;font-size:.72rem;">{{ order.dashboard_status }}</span>
             </div>
             {% endfor %}
+            <div class="d-flex gap-2 mt-2">
+              <span class="status-badge" style="background:#E8F4FF;color:#1e40af;font-size:.72rem;">Processing: {{ processing_count }}</span>
+              <span class="status-badge" style="background:#fef3c7;color:#92400e;font-size:.72rem;">Packed: {{ packed_count }}</span>
+              <span class="status-badge" style="background:#d1fae5;color:#065f46;font-size:.72rem;">Delivered: {{ delivered_count }}</span>
+            </div>
           {% else %}
           <div class="text-center py-4 text-muted">
             <div style="font-size:40px;">📭</div>
@@ -233,16 +238,15 @@ window.addEventListener('DOMContentLoaded', function(){
       <div style="background:linear-gradient(135deg,rgba(255,149,0,.1),rgba(155,93,229,.1));padding:24px 24px 18px;">
         <h5 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:0;">Add Product</h5>
       </div>
-      <form method="post" action="{% url 'add_product_inventory' %}" style="padding:20px 24px 24px;">
+      <form method="post" enctype="multipart/form-data" action="{% url 'add_product_inventory' %}" style="padding:20px 24px 24px;">
         {% csrf_token %}
         <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Product Name</label>{{ product_form.product_name }}</div>
         <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Category</label>{{ product_form.category }}</div>
         <div class="row g-2 mb-2">
-          <div class="col-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Quantity</label>{{ product_form.quantity }}</div>
-          <div class="col-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Unit Type</label>{{ product_form.unit_type }}</div>
+          <div class="col-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Price</label>{{ product_form.price_per_unit }}</div>
+          <div class="col-6"><label class="form-label fw-semibold" style="font-size:.82rem;">Stock Quantity</label>{{ product_form.stock_quantity }}</div>
         </div>
-        <div class="mb-2"><label class="form-label fw-semibold" style="font-size:.82rem;">Price per Unit</label>{{ product_form.price_per_unit }}</div>
-        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:.82rem;">Supplier Shop</label>{{ product_form.supplier_shop }}</div>
+        <div class="mb-3"><label class="form-label fw-semibold" style="font-size:.82rem;">Product Image (optional)</label>{{ product_form.product_image }}</div>
         <button type="submit" class="btn btn-pill btn-rose w-100">Save Product</button>
       </form>
       <button type="button" class="btn-close position-absolute" data-bs-dismiss="modal" aria-label="Close" style="top:14px;right:14px;"></button>

@@ -1,29 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}Add Adoption Listing — PawNest{% endblock %}
+{% block title %}Add Adoption Listing — fluffbud{% endblock %}
 {% block content %}
 <div class="container py-4" style="max-width:640px;">
   <div class="section-tag">🏠 Add Listing</div>
-  <h2 class="page-header mb-4">Add a pet for adoption</h2>
+  <h2 class="page-header mb-4">Add Listing for Adoption</h2>
   <div class="card-soft p-4">
-    <form method="post" enctype="multipart/form-data">
+    <form method="post">
       {% csrf_token %}
       <div class="row g-3">
-        <div class="col-md-6"><label class="form-label fw-semibold">Pet Name *</label>{{ form.name }}</div>
-        <div class="col-md-6"><label class="form-label fw-semibold">Species *</label>{{ form.species }}</div>
-        <div class="col-md-6"><label class="form-label fw-semibold">Breed</label>{{ form.breed }}</div>
-        <div class="col-md-3"><label class="form-label fw-semibold">Age (months)</label>{{ form.age }}</div>
-        <div class="col-md-3"><label class="form-label fw-semibold">Gender</label>{{ form.gender }}</div>
-        <div class="col-md-6"><label class="form-label fw-semibold">Size</label>{{ form.size }}</div>
-        <div class="col-md-6"><label class="form-label fw-semibold">Color</label>{{ form.color }}</div>
-        <div class="col-12"><label class="form-label fw-semibold">Description</label>{{ form.description }}</div>
-        <div class="col-md-6 form-check ms-3"><label class="form-check-label">{{ form.vaccinated }} Vaccinated</label></div>
-        <div class="col-md-6 form-check ms-3"><label class="form-check-label">{{ form.neutered }} Neutered/Spayed</label></div>
-        <div class="col-12"><label class="form-label fw-semibold">Location *</label>{{ form.location }}</div>
-        <div class="col-12"><label class="form-label fw-semibold">Photo</label>{{ form.photo }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Select Animal in Care *</label>{{ form.animal }}</div>
+        <div class="col-md-6"><label class="form-label fw-semibold">Adoption Fee *</label>{{ form.adoption_fee }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Adoption Description</label>{{ form.adoption_description }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Vaccination Records</label>{{ form.vaccination_records }}</div>
+        <div class="col-12"><label class="form-label fw-semibold">Medical Notes</label>{{ form.medical_notes }}</div>
       </div>
       <div class="d-flex gap-3 mt-4">
-        <button type="submit" class="btn btn-pill btn-rose flex-grow-1">Add Listing 🐾</button>
-        <a href="{% url 'dashboard' %}" class="btn btn-pill btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-pill btn-rose flex-grow-1">Save Listing</button>
+        <a href="{% url 'adoption' %}" class="btn btn-pill btn-ghost">Cancel</a>
       </div>
     </form>
   </div>

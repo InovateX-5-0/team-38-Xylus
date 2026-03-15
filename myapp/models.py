@@ -16,6 +16,12 @@ class CustomUser(AbstractUser):
     city = models.CharField(max_length=100, blank=True)
     profile_photo = models.ImageField(upload_to='profiles/', blank=True, null=True)
     bio = models.TextField(blank=True)
+    PROFILE_VISIBILITY_CHOICES = [
+        ('public', 'Public'),
+        ('private', 'Private'),
+    ]
+    profile_visibility = models.CharField(max_length=10, choices=PROFILE_VISIBILITY_CHOICES, default='private')
+    two_factor_enabled = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.get_full_name() or self.username} ({self.role})"
@@ -278,6 +284,7 @@ class AdoptionListing(models.Model):
     SIZE_CHOICES = [('small', 'Small'), ('medium', 'Medium'), ('large', 'Large')]
 
     shelter = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='adoption_listings')
+    animal = models.ForeignKey('Animal', on_delete=models.SET_NULL, null=True, blank=True, related_name='adoption_listings')
     name = models.CharField(max_length=100)
     species = models.CharField(max_length=50)
     breed = models.CharField(max_length=100, blank=True)
@@ -291,6 +298,10 @@ class AdoptionListing(models.Model):
     neutered = models.BooleanField(default=False)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='available')
     location = models.CharField(max_length=200)
+    adoption_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    adoption_description = models.TextField(blank=True)
+    vaccination_records = models.TextField(blank=True)
+    medical_notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -324,6 +335,7 @@ class Animal(models.Model):
     SPECIES_CHOICES = [
         ('dog', 'Dog'),
         ('cat', 'Cat'),
+        ('bird', 'Bird'),
         ('rabbit', 'Rabbit'),
         ('other', 'Other'),
     ]
@@ -340,7 +352,8 @@ class Animal(models.Model):
         ('not_vaccinated', 'Not Vaccinated'),
     ]
     ADOPTION_STATUS_CHOICES = [
-        ('available', 'Available'),
+        ('available', 'In Care'),
+        ('listed', 'Listed for Adoption'),
         ('adopted', 'Adopted'),
     ]
 
@@ -374,7 +387,7 @@ class AdoptionApplication(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('approved', 'Approved'),
-        ('denied', 'Denied'),
+        ('rejected', 'Rejected'),
     ]
 
     animal = models.ForeignKey(Animal, on_delete=models.CASCADE, related_name='applications')
@@ -504,10 +517,12 @@ class Supplier(models.Model):
 
 class ProductInventory(models.Model):
     CATEGORY_CHOICES = [
-        ('food', 'Food'),
+        ('pet_food', 'Pet Food'),
         ('toys', 'Toys'),
-        ('health', 'Health'),
+        ('grooming', 'Grooming'),
         ('accessories', 'Accessories'),
+        ('medicines', 'Medicines'),
+        ('others', 'Others'),
     ]
     UNIT_TYPE_CHOICES = [
         ('bags', 'bags'),
@@ -522,6 +537,7 @@ class ProductInventory(models.Model):
     stock_quantity = models.PositiveIntegerField(default=0)
     unit_type = models.CharField(max_length=20, choices=UNIT_TYPE_CHOICES, default='pcs')
     price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    product_image = models.ImageField(upload_to='store_products/', blank=True, null=True)
     low_stock_threshold = models.PositiveIntegerField(default=5)
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -541,8 +557,8 @@ class CustomerOrder(models.Model):
         ('in_store', 'In-Store'),
     ]
     STATUS_CHOICES = [
-        ('packing', 'Packing'),
-        ('shipped', 'Shipped'),
+        ('processing', 'Processing'),
+        ('packed', 'Packed'),
         ('delivered', 'Delivered'),
     ]
 
@@ -714,7 +730,9 @@ class GroomingSession(models.Model):
 class GroomingSupply(models.Model):
     CATEGORY_CHOICES = [
         ('shampoo', 'Shampoo'),
+        ('brush', 'Brush'),
         ('conditioner', 'Conditioner'),
+        ('clipper', 'Clipper'),
         ('blades', 'Grooming Blades'),
         ('ear_cleaning', 'Ear Cleaning Solution'),
         ('de_shedding', 'De-shedding Spray'),
@@ -739,6 +757,34 @@ class GroomingSupply(models.Model):
 
     def __str__(self):
         return self.product_name
+
+
+class GroomingBooking(ServiceBooking):
+    class Meta:
+        proxy = True
+        verbose_name = 'Grooming Booking'
+        verbose_name_plural = 'Grooming Bookings'
+
+
+class GroomerProduct(GroomingSupply):
+    class Meta:
+        proxy = True
+        verbose_name = 'Groomer Product'
+        verbose_name_plural = 'Groomer Products'
+
+
+class ProductUsage(models.Model):
+    groomer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='product_usage_logs')
+    supply = models.ForeignKey(GroomingSupply, on_delete=models.CASCADE, related_name='usage_logs')
+    booking = models.ForeignKey(ServiceBooking, on_delete=models.SET_NULL, null=True, blank=True, related_name='product_usage_logs')
+    used_count = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.supply.product_name} used x{self.used_count}"
 
 
 class GroomingSupplyOrder(models.Model):

@@ -8,9 +8,11 @@ urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('logout/service-provider/', views.logout_view, name='logout_service_provider'),
 
     # Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/shelter/', views.dashboard, name='shelter_dashboard'),
     path('analytics/', views.analytics, name='analytics'),
 
     # Pets
@@ -36,10 +38,14 @@ urlpatterns = [
     # Adoption
     path('adoption/', views.adoption, name='adoption'),
     path('adoption/add/', views.add_adoption_listing, name='add_adoption_listing'),
+    path('shelter/add-listing/', views.add_adoption_listing, name='shelter_add_listing'),
     path('adoption/<int:pk>/request/', views.adoption_request, name='adoption_request'),
+    path('adoption/application/<int:pk>/confirmation/', views.adoption_application_confirmation, name='adoption_application_confirmation'),
     path('adoption/request/<int:pk>/<str:action>/', views.manage_adoption_request, name='manage_adoption_request'),
     path('adoption/applications/', views.view_all_applications, name='view_all_applications'),
+    path('shelter/view-applications/', views.view_all_applications, name='shelter_view_applications'),
     path('shelter/intake/log/', views.log_shelter_intake, name='log_shelter_intake'),
+    path('shelter/log-intake/', views.log_shelter_intake, name='shelter_log_intake'),
 
     # Lost & Found
     path('lost-found/', views.lost_found, name='lost_found'),
@@ -69,12 +75,17 @@ urlpatterns = [
     path('services/manage/', views.manage_service, name='manage_service'),
     path('services/book/<int:pk>/', views.book_service, name='book_service'),
     path('services/booking/<int:pk>/<str:status>/', views.update_service_booking, name='update_service_booking'),
+    path('groomer-dashboard/', views.groomer_dashboard, name='groomer_dashboard'),
+    path('groomer-bookings/', views.groomer_bookings, name='groomer_bookings'),
+    path('groomer-inventory/', views.groomer_inventory, name='groomer_inventory'),
+    path('groomer/update-booking-status/<int:pk>/<str:status>/', views.update_groomer_booking_status, name='update_groomer_booking_status'),
     path('grooming/booking/<int:pk>/keep-waiting/', views.keep_waiting_grooming_booking, name='keep_waiting_grooming_booking'),
     path('grooming/booking/<int:pk>/accept/', views.accept_grooming_booking, name='accept_grooming_booking'),
     path('grooming/booking/<int:pk>/reschedule/', views.reschedule_grooming_booking, name='reschedule_grooming_booking'),
     path('grooming/supply/add/', views.add_grooming_supply, name='add_grooming_supply'),
     path('grooming/reorder/preview/', views.reorder_grooming_supplies_preview, name='reorder_grooming_supplies_preview'),
     path('grooming/reorder/confirm/', views.reorder_grooming_supplies_confirm, name='reorder_grooming_supplies_confirm'),
+    path('grooming/product-usage/track/', views.track_product_usage, name='track_product_usage'),
     path('grooming/care-note/add/', views.add_client_care_note, name='add_client_care_note'),
 
     # Vet Clinic

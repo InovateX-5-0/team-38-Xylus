@@ -5,7 +5,8 @@ from .models import (CustomUser, Pet, HealthRecord, VaccinationReminder,
                      LostPetReport, PetStore, InventoryItem, SocialPost, PostComment, VetClinic,
                      ServiceProvider, ServiceBooking, MedicineInventory,
                      GroomingSupply, ClientCareNote,
-                     Animal, AdoptionApplication, VaccinationAppointment, MedicalRecordFile)
+                     Animal, AdoptionApplication, VaccinationAppointment, MedicalRecordFile,
+                     ProductInventory)
 
 
 class SignupForm(UserCreationForm):
@@ -53,12 +54,11 @@ class PetForm(forms.ModelForm):
 class HealthRecordForm(forms.ModelForm):
     class Meta:
         model = HealthRecord
-        exclude = ['pet', 'vet', 'created_at']
+        fields = ['title', 'description', 'diagnosis', 'medications', 'date', 'weight_at_visit', 'attachment']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'diagnosis': forms.TextInput(attrs={'class': 'form-control'}),
-            'treatment': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'medications': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'weight_at_visit': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -69,13 +69,12 @@ class HealthRecordForm(forms.ModelForm):
 class VaccinationReminderForm(forms.ModelForm):
     class Meta:
         model = VaccinationReminder
-        exclude = ['pet', 'created_at']
+        fields = ['reminder_type', 'title', 'notes', 'due_date']
         widgets = {
             'reminder_type': forms.Select(attrs={'class': 'form-select'}),
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
         }
 
 
@@ -103,21 +102,23 @@ class AppointmentForm(forms.ModelForm):
 class AdoptionListingForm(forms.ModelForm):
     class Meta:
         model = AdoptionListing
-        exclude = ['shelter', 'status', 'created_at']
+        fields = ['animal', 'adoption_fee', 'adoption_description', 'vaccination_records', 'medical_notes']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'species': forms.TextInput(attrs={'class': 'form-control'}),
-            'breed': forms.TextInput(attrs={'class': 'form-control'}),
-            'age': forms.NumberInput(attrs={'class': 'form-control'}),
-            'gender': forms.Select(attrs={'class': 'form-select'}),
-            'size': forms.Select(attrs={'class': 'form-select'}),
-            'color': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'vaccinated': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'neutered': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'location': forms.TextInput(attrs={'class': 'form-control'}),
-            'photo': forms.FileInput(attrs={'class': 'form-control'}),
+            'animal': forms.Select(attrs={'class': 'form-select'}),
+            'adoption_fee': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': 0}),
+            'adoption_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'vaccination_records': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'medical_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
+
+    def __init__(self, shelter_user=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['animal'].empty_label = 'Select an animal in care'
+        if shelter_user:
+            self.fields['animal'].queryset = Animal.objects.filter(
+                shelter=shelter_user,
+                adoption_status='available',
+            ).order_by('-created_at')
 
 
 class AdoptionRequestForm(forms.ModelForm):
@@ -282,6 +283,14 @@ class GroomingSupplyForm(forms.ModelForm):
         }
 
 
+class GroomingBookingForm(ServiceBookingForm):
+    pass
+
+
+class GroomerInventoryForm(GroomingSupplyForm):
+    pass
+
+
 class ClientCareNoteForm(forms.ModelForm):
     class Meta:
         model = ClientCareNote
@@ -365,26 +374,17 @@ class AdoptionApplicationForm(forms.ModelForm):
         }
 
 
-class ProductInventoryForm(forms.Form):
-    CATEGORY_CHOICES = [
-        ('food', 'Food'),
-        ('toys', 'Toys'),
-        ('health', 'Health'),
-        ('accessories', 'Accessories'),
-    ]
-    UNIT_TYPE_CHOICES = [
-        ('bags', 'bags'),
-        ('cans', 'cans'),
-        ('pcs', 'pcs'),
-        ('boxes', 'boxes'),
-    ]
-
-    product_name = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    category = forms.ChoiceField(choices=CATEGORY_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
-    quantity = forms.IntegerField(min_value=0, widget=forms.NumberInput(attrs={'class': 'form-control'}))
-    unit_type = forms.ChoiceField(choices=UNIT_TYPE_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
-    price_per_unit = forms.DecimalField(min_value=0, decimal_places=2, widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
-    supplier_shop = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control'}))
+class ProductInventoryForm(forms.ModelForm):
+    class Meta:
+        model = ProductInventory
+        fields = ['product_name', 'category', 'price_per_unit', 'stock_quantity', 'product_image']
+        widgets = {
+            'product_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'price_per_unit': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': 0}),
+            'stock_quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'product_image': forms.FileInput(attrs={'class': 'form-control'}),
+        }
 
 
 class AutoReorderForm(forms.Form):

@@ -8,7 +8,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ['username', 'email', 'first_name', 'last_name', 'role', 'city']
     list_filter = ['role', 'is_active']
     fieldsets = UserAdmin.fieldsets + (
-        ('PawNest Profile', {'fields': ('role', 'phone', 'city', 'profile_photo', 'bio')}),
+        ('fluffbud Profile', {'fields': ('role', 'phone', 'city', 'profile_photo', 'bio')}),
     )
 
 
